@@ -23,9 +23,9 @@ function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHoriz
     % the PML layers and air have the same beta value.
     
     % STEP2: Build Tube : Sigma value for the tube wall should be 
-    % [1] Check if tube has any horizontal length, but no vertical length
-    % [2] Check if tube has any vertical length, but not horizontal length
-    % [3] Check if tube has both horizontal and vertical length
+    % [1] Check if the tube has any horizontal length, but no vertical length
+    % [2] Check if the tube has any vertical length, but not horizontal length
+    % [3] Check if the tube has both horizontal and vertical length
 
     % Begin: 
     
@@ -89,6 +89,47 @@ function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHoriz
         % Find source coordinate inside the tube
         xSrc = round((xEndLeftWall + xEndRightWall)/2);
         ySrc = yEndLeftWall-1;
+    end
+    
+    % [3] Check if the tube has both horizontal and vertical length
+    if tubeHorizontalLength > 0 && tubeVerticalLength >0
+        xUpperStart  = floor(Nx/2) + (tubeHorizontalLength-...
+                                      round(tubeHorizontalLength/2));
+        yUpperStart  = Ny/2;
+        
+        xUpperMiddle = floor(Nx/2) - round(tubeHorizontalLength/2);
+        yUpperMiddle = Ny/2;
+        
+        xLowerStart  = xUpperStart;
+        yLowerStart  = yUpperStart + tubeWidth+1;
+        
+        xLowerMiddle = (xUpperMiddle + tubeWidth + 1);
+        yLowerMiddle = yUpperMiddle + tubeWidth + 1;
+        
+        xUpperEnd    = xUpperMiddle;
+        yUpperEnd    = yUpperMiddle + tubeVerticalLength;
+        
+        xLowerEnd    = xLowerMiddle;
+        yLowerEnd    = yUpperEnd;
+        
+        % Build Upper tube wall
+        refFrameBeta(xUpperEnd:xUpperMiddle,...
+                     yUpperMiddle:yUpperEnd) = betaTube;
+        refFrameBeta(xUpperMiddle:xUpperStart,...
+                     yUpperMiddle:yUpperStart)= betaTube;
+                 
+        % Build Lower tube wall
+        refFrameBeta(xLowerEnd:xLowerMiddle,...
+                     yLowerMiddle:yLowerEnd) = betaTube;
+                 
+        refFrameBeta(xLowerMiddle:xLowerStart,...
+                     yLowerMiddle:yLowerStart) = betaTube;
+                 
+        % Build side wall for vertical tube
+        refFrameBeta(xUpperEnd:xLowerEnd, yUpperEnd) = betaTube;
+        
+        xSrc = round((xUpperEnd+xLowerEnd)/2);
+        ySrc = yUpperEnd - 1;
     end
     
     return; 

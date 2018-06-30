@@ -25,7 +25,7 @@
 % Wave equation to implement Tube with PML
 % dp/dt + sigPrime*p = -(rho*c*c*r*del.(v))
 % dv/dt + sigPrime*v = (-beta^2/rho)*(del(P)) + sigprimeVb
-% sigPrime = 1-beta+sigPrime
+% sigPrime = 1-beta+sigma
 %***********************************************************************
 
 % Initialize MATLAB environment
@@ -91,12 +91,12 @@ refFrameSigma = buildFrameSigma(domainW, domainH, pmlLayer, maxSigmaVal, dt);
 [refFrameBeta, xSrc, ySrc]  = buildFrameBeta(domainW, domainH, tubeHorizontalLength,...
                    tubeVerticalLength, tubeWidth, pmlLayer);
 
-refFrameBeta(xSrc, ySrc) = 1;
+refFrameBeta(xSrc, ySrc) = 0;
 
 % Just to visualize the PML layers with the tube structure, I've multiplied 
-% refFrameBeta with 1e5.
-refFrameSigmaPrimeVisual = 1-(1e5*refFrameBeta)+refFrameSigma ;
-figure('color','w'); imagesc(refFrameSigmaPrimeVisual); hold off;
+% refFrameBeta with 1e6.
+refFrameSigmaPrimeVisual = 1-(1e6*refFrameBeta)+refFrameSigma ;
+figure('color','w'); imagesc(refFrameSigmaPrimeVisual');
 
 % Actual refFrameSigmaPrime value
 refFrameSigmaPrime = 1-refFrameBeta + refFrameSigma ;
@@ -150,10 +150,9 @@ Pr  = zeros(Nx, Ny);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FDTD ANALYSIS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 for T = 1: STEPS
     
-    % STEP1 : Solve CxP & CyP
+    % STEP1 : Solve CxP & CyP : Calculate Pressure gradient
     CxP(1:Nx-1,:) = (Pr(2:Nx,:)-Pr(1:Nx-1,:))/dx;
     CxP(Nx,:) = (Pr(1,:)-Pr(Nx,:))/dx;
     
@@ -168,7 +167,7 @@ for T = 1: STEPS
     Ux = mUx1.*Ux + mUx2.*CxP + mUx3.*Ubx;
     Vy = mVy1.*Vy + mVy2.*CyP + mVy3.*Vby;
        
-    % STEP4 : CxU & CyV   
+    % STEP4 : CxU & CyV  
     CxU(1,:)  = (Ux(1,:) - Ux(Nx,:))/dx;
     CxU(2:Nx,:)  = (Ux(2:Nx,:) - Ux(1:Nx-1,:))/dx;    
     
@@ -183,7 +182,7 @@ for T = 1: STEPS
     
     % STEP7 : Draw the graphics
     if ~mod(T,20)
-        imagesc(Pr*50, [-1,1]); colorbar; % Multiplied with twenty to change the color code
+        imagesc(Pr'*50, [-1,1]); colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
         title(['STEP NUMBER: ' num2str(T) ' OUT OF ' num2str(STEPS)]);
