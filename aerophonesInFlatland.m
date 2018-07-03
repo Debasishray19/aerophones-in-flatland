@@ -57,16 +57,17 @@ PML_OFF = 0;                       % fictitious conductance when PML is OFF
 maxSigmaVal = 0.5;                 % Attenuation coefficient at the PML layer
 alpha = 0.004;                     % Reflection coefficient
 Zn = ((1+sqrt(1-alpha))/(1-sqrt(1-alpha)))*rho*c; % Acoustic Impedance
+Fs = 44100;                        % Sample frequency
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DASHBOARD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dx = 3.83e-3;            % spatial resolution along x-direction
-dy = 3.83e-3;            % apatial resolution along y-direction
-dt = 7.81e-6;            % temporal resolution
-STEPS = 10000;           % number of time-steps for simulation
-kappa = rho*c*c;             % Bulk modulus
-CURR_PML_VAL = PML_ON;  % current pml status
+dt = 1/Fs;                         % temporal resolution/ sample time period
+dx = dt*c*sqrt( 2.0 );             % spatial resolution along x-direction: CFL Condition
+dy = dt*c*sqrt( 2.0 );             % spatial resolution along x-direction: CFL Condition
+AudioTime = 2*second;              % Total audio signal time
+kappa = rho*c*c;                   % Bulk modulus
+CURR_PML_VAL = PML_ON;             % current pml status
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GRID CELL CONSTRUCTION : DEFINE SIGMA AND BETA VALUE FOR EACH CELL
@@ -108,14 +109,20 @@ Ny = size(refFrameSigmaPrime, 2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SOURCE PARAMETERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-freq = 1*kilohertz;      % source frequency
-t = (1:STEPS).*dt;       % time steps
-Esrc = sin(2*pi*freq*t); % sinusoidal source wave
+freq = 1*kilohertz;          % source frequency
+t = 0:dt:AudioTime-dt;       % time steps
+STEPS = length(t);
+Esrc = 25*sin(2*pi*freq*t);     % sinusoidal source wave
 
 % Source parameters for Gaussian source
 tau = 0.5/freq;
 t0 = 6*tau;
 % Esrc = exp(-(((t-t0)./tau).^2));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PRESSURE CHANGE - AUDIO GENERATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Pr_Audio = zeros(1, STEPS);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FDTD PARAMETERS - PART I (DEFINE UPDATE COEFFICIENT)
@@ -180,8 +187,11 @@ for T = 1: STEPS
     % STEP6: Inject source
     Pr(xSrc,ySrc) = Pr(xSrc,ySrc) + Esrc(T);
     
-    % STEP7 : Draw the graphics
-    if ~mod(T,20)
+    % STEP6: Store pressure change for audio generation
+    Pr_Audio(T) = Pr(xSrc+40,ySrc+40);
+    
+    % STEP8 : Draw the graphics
+    if ~mod(T,5000)
         imagesc(Pr'*50, [-1,1]); colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
