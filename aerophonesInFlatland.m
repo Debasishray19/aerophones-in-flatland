@@ -95,7 +95,7 @@ refFrameSigma = buildFrameSigma(domainW, domainH, pmlLayer, maxSigmaVal, dt);
 refSigmaPrime = 1- refFrameBeta + refFrameSigma;
 
 % Validate tube structure
-figure('color','w'); imagesc(refFrameSigma');
+figure('color','w'); imagesc('refFrameSigma');
 
 % Define Grid/Frame size
 [Nx, Ny] = size(refFrameSigma);
