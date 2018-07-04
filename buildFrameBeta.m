@@ -1,4 +1,4 @@
-function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHorizontalLength,...
+function [refFrameBeta, xSrc, ySrc, xLis, yLis] = buildFrameBeta(domainW, domainH, tubeHorizontalLength,...
                    tubeVerticalLength, tubeWidth, pmlLayer)
             
     % BUILDFRAMEBETA function helps to add the beta value to the grid cells
@@ -6,7 +6,7 @@ function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHoriz
     % Beta value = 1 for Air
     % Beta value = 0 for Tube Wall     
     % Beta Value = 1 for listener
-    betaTube = 0;
+     betaTube = 0;
 
     % Frame Size = Domain Size + PML Layer(Up/Left + Down/Right)
     Nx = domainW + 2*pmlLayer;
@@ -58,6 +58,10 @@ function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHoriz
         % Find source coordinate inside the tube
         xSrc = xStartLowerWall+1;
         ySrc = round((yStartUpperWall + yStartLowerWall)/2);
+        
+        % Find listener position
+        xLis = round((xEndUpperWall + xEndLowerWall)/2);
+        yLis = round((yEndUpperWall + yEndLowerWall)/2);
     end
    
     % [2] Check if the tube has any vertical length, but not horizontal length
@@ -89,6 +93,10 @@ function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHoriz
         % Find source coordinate inside the tube
         xSrc = round((xEndLeftWall + xEndRightWall)/2);
         ySrc = yEndLeftWall-1;
+        
+        % Find listener position
+        xLis = round((xStartLeftWall + xStartRightWall)/2);
+        yLis = round((yStartLeftWall + yStartRightWall)/2);
     end
     
     % [3] Check if the tube has both horizontal and vertical length
@@ -98,7 +106,7 @@ function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHoriz
         yUpperStart  = Ny/2;
         
         xUpperMiddle = floor(Nx/2) - round(tubeHorizontalLength/2);
-        yUpperMiddle = Ny/2;
+        yUpperMiddle = floor(Ny/2);
         
         xLowerStart  = xUpperStart;
         yLowerStart  = yUpperStart + tubeWidth+1;
@@ -128,8 +136,13 @@ function [refFrameBeta, xSrc, ySrc] = buildFrameBeta(domainW, domainH, tubeHoriz
         % Build side wall for vertical tube
         refFrameBeta(xUpperEnd:xLowerEnd, yUpperEnd) = betaTube;
         
+        % Find source coordinate inside the tube
         xSrc = round((xUpperEnd+xLowerEnd)/2);
         ySrc = yUpperEnd - 1;
+        
+        % Find listener position
+        xLis = round((xUpperStart + xLowerStart)/2);
+        yLis = round((yUpperStart + yLowerStart)/2);
     end
     
     return; 

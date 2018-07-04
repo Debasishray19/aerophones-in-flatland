@@ -24,7 +24,7 @@
 
 % Wave equation to implement Tube with PML
 % dp/dt + sigPrime*p = -(rho*c*c*r*del.(v))
-% dv/dt + sigPrime*v = (-beta^2/rho)*(del(P)) + sigprimeVb
+% dv/dt + sigPrime*v = (-beta^2/rho)*(del(P)) + sigprime*Vb
 % sigPrime = 1-beta+sigma
 %***********************************************************************
 
@@ -52,22 +52,19 @@ kilogram  = 1e3*gram;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rho = 1.1760*kilogram/(meter^3);   % Air density  [kg/m^3]
 c   = 343*meter/second;            % Sound speed in air [m/s]
-PML_ON  = 1;                       % fictitious conductance when PML is ON
-PML_OFF = 0;                       % fictitious conductance when PML is OFF
 maxSigmaVal = 0.5;                 % Attenuation coefficient at the PML layer
 alpha = 0.004;                     % Reflection coefficient
-Zn = ((1+sqrt(1-alpha))/(1-sqrt(1-alpha)))*rho*c; % Acoustic Impedance
-Fs = 44100;                        % Sample frequency
+srate = 44100;                     % Sample frequency
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DASHBOARD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dt = 1/Fs;                         % temporal resolution/ sample time period
-dx = dt*c*sqrt( 2.0 );             % spatial resolution along x-direction: CFL Condition
-dy = dt*c*sqrt( 2.0 );             % spatial resolution along x-direction: CFL Condition
+dt = 1/srate;                      % Temporal resolution/ sample time period
+dx = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
+dy = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
 AudioTime = 2*second;              % Total audio signal time
 kappa = rho*c*c;                   % Bulk modulus
-CURR_PML_VAL = PML_ON;             % current pml status
+Zn = ((1+sqrt(1-alpha))/(1-sqrt(1-alpha)))*rho*c; % Acoustic Impedance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GRID CELL CONSTRUCTION : DEFINE SIGMA AND BETA VALUE FOR EACH CELL
@@ -87,31 +84,28 @@ tubeWidth = input('Enter tube width: ');
 % Number of PML layers
 pmlLayer = input('Number of PML layer: ');
 
-% build the tube inside the problem space and add the PML layers
+% Assign sigma value to grtid cells
 refFrameSigma = buildFrameSigma(domainW, domainH, pmlLayer, maxSigmaVal, dt);
-[refFrameBeta, xSrc, ySrc]  = buildFrameBeta(domainW, domainH, tubeHorizontalLength,...
+
+% Assign beta value to grid cells
+[refFrameBeta, Xsrc, Ysrc, Xlis, Ylis] = buildFrameBeta(domainW, domainH, tubeHorizontalLength,...
                    tubeVerticalLength, tubeWidth, pmlLayer);
+               
+% Calculate sigmaPrime
+refSigmaPrime = 1- refFrameBeta + refFrameSigma;
 
-refFrameBeta(xSrc, ySrc) = 0;
-
-% Just to visualize the PML layers with the tube structure, I've multiplied 
-% refFrameBeta with 1e6.
-refFrameSigmaPrimeVisual = 1-(1e6*refFrameBeta)+refFrameSigma ;
-figure('color','w'); imagesc(refFrameSigmaPrimeVisual');
-
-% Actual refFrameSigmaPrime value
-refFrameSigmaPrime = 1-refFrameBeta + refFrameSigma ;
+% Validate tube structure
+figure('color','w'); imagesc(refFrameSigma');
 
 % Define Grid/Frame size
-Nx = size(refFrameSigmaPrime, 1);
-Ny = size(refFrameSigmaPrime, 2);
+[Nx, Ny] = size(refFrameSigma);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SOURCE PARAMETERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-freq = 1*kilohertz;          % source frequency
-t = 0:dt:AudioTime-dt;       % time steps
-STEPS = length(t);
+freq = 1*kilohertz;             % source frequency
+t = 0:dt:AudioTime-dt;          % time steps
+STEPS = length(t);              % Total time steps
 Esrc = 25*sin(2*pi*freq*t);     % sinusoidal source wave
 
 % Source parameters for Gaussian source
@@ -127,19 +121,19 @@ Pr_Audio = zeros(1, STEPS);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FDTD PARAMETERS - PART I (DEFINE UPDATE COEFFICIENT)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-mUx0 = (refFrameBeta./dt) + (refFrameSigmaPrime./2);
-mUx1 = ((refFrameBeta./dt) - (refFrameSigmaPrime./2))./mUx0;
+mUx0 = (refFrameBeta./dt) + (refSigmaPrime./2);
+mUx1 = ((refFrameBeta./dt) - (refSigmaPrime./2))./mUx0;
 mUx2 = (-(refFrameBeta.*refFrameBeta)./rho)./mUx0;
-mUx3 = refFrameSigmaPrime./mUx0;
+mUx3 = refSigmaPrime./mUx0;
 
-mVy0 = (refFrameBeta./dt) + (refFrameSigmaPrime./2);
-mVy1 = ((refFrameBeta./dt) - (refFrameSigmaPrime./2))./mVy0;
-mVy2 = (-(refFrameBeta.*refFrameBeta)./rho)./mVy0;
-mVy3 = refFrameSigmaPrime./mVy0;
+mVy0 = (refFrameBeta./dt) + (refSigmaPrime./2);
+mVy1 = ((refFrameBeta./dt) - (refSigmaPrime./2))./mUx0;
+mVy2 = (-(refFrameBeta.*refFrameBeta)./rho)./mUx0;
+mVy3 = refSigmaPrime./mUx0;
 
-mPr0 = 1/dt + refFrameSigmaPrime./2;
-mPr1 = (1/dt - refFrameSigmaPrime./2)./mPr0;
-mPr2 = (-kappa)./mPr0;
+mPr0 = 1/dt + refSigmaPrime./2;
+mPr1 = (1/dt - refSigmaPrime./2)./mPr0;
+mPr2 = -kappa./mPr0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FDTD PARAMETERS - PART II (INITIALISING FIELD)
@@ -159,39 +153,39 @@ Pr  = zeros(Nx, Ny);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for T = 1: STEPS
     
-    % STEP1 : Solve CxP & CyP : Calculate Pressure gradient
-    CxP(1:Nx-1,:) = (Pr(2:Nx,:)-Pr(1:Nx-1,:))/dx;
-    CxP(Nx,:) = (Pr(1,:)-Pr(Nx,:))/dx;
-    
-    CyP(:,1:Ny-1) = (Pr(:,2:Ny) - Pr(:,1:Ny-1))/dy;
-    CyP(:,Ny) = (Pr(:,1) - Pr(:,Ny))/dy;
-    
-    % Step2: Solve Vby and Ubx : To verify tube boundary
-    Ubx(1:Nx-1,:) = Pr(2:Nx,:)./Zn;
-    Vby(:, 1:Ny-1)  = Pr(:,2:Ny)./Zn;
-    
-    % STEP3 : Solve Ux & Vy
-    Ux = mUx1.*Ux + mUx2.*CxP + mUx3.*Ubx;
-    Vy = mVy1.*Vy + mVy2.*CyP + mVy3.*Vby;
-       
-    % STEP4 : CxU & CyV  
+    % STEP1 : CxU & CyV   
     CxU(1,:)  = (Ux(1,:) - Ux(Nx,:))/dx;
     CxU(2:Nx,:)  = (Ux(2:Nx,:) - Ux(1:Nx-1,:))/dx;    
     
     CyV(:,1) = (Vy(:,1) - Vy(:,Ny))/dy;
     CyV(:,2:Ny) = (Vy(:,2:Ny) - Vy(:,1:Ny-1))/dy;   
     
-    % STEP5 : Solve Pr
+    % STEP2 : Solve Pr
     Pr = Pr.*mPr1 + (mPr2.*(CxU+CyV));
     
-    % STEP6: Inject source
-    Pr(xSrc,ySrc) = Pr(xSrc,ySrc) + Esrc(T);
+    % STEP3 : Solve CxP & CyP
+    CxP(1:Nx-1,:) = (Pr(2:Nx,:)-Pr(1:Nx-1,:))/dx;
+    CxP(Nx,:) = (Pr(1,:)-Pr(Nx,:))/dx;
     
-    % STEP6: Store pressure change for audio generation
-    Pr_Audio(T) = Pr(xSrc+40,ySrc+40);
+    CyP(:,1:Ny-1) = (Pr(:,2:Ny) - Pr(:,1:Ny-1))/dy;
+    CyP(:,Ny) = (Pr(:,1) - Pr(:,Ny))/dy;
+    
+    % STEP4 : Solve Ubx and Vby
+    Ubx(domainW:Nx-domainW, domainH:Ny-domainH) = Pr(domainW:Nx-domainW, domainH:Ny-domainH)/Zn;
+    Vby(domainW:Nx-domainW, domainH:Ny-domainH) = Pr(domainW:Nx-domainW, domainH:Ny-domainH)/Zn;
+    
+    % STEP5 : Solve Ux & Vy
+    Ux = mUx1.*Ux + mUx2.*CxP + mUx3.*Ubx;
+    Vy = mVy1.*Vy + mVy2.*CyP + mVy3.*Vby;
+    
+    % STEP6: Inject source
+    Pr(Xsrc,Ysrc) = Pr(Xsrc,Ysrc) + Esrc(T);
+    
+    % STEP7: Store pressure change for audio generation
+    Pr_Audio(T) = Pr(Xlis, Ylis);
     
     % STEP8 : Draw the graphics
-    if ~mod(T,5000)
+    if ~mod(T,500)
         imagesc(Pr'*50, [-1,1]); colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
