@@ -95,7 +95,7 @@ refFrameSigma = buildFrameSigma(domainW, domainH, pmlLayer, maxSigmaVal, dt);
 refSigmaPrime = 1- refFrameBeta + refFrameSigma;
 
 % Validate tube structure
-figure('color','w'); imagesc('refFrameSigma');
+figure('color','w'); imagesc(refFrameSigma);
 
 % Define Grid/Frame size
 [Nx, Ny] = size(refFrameSigma);
@@ -185,7 +185,7 @@ for T = 1: STEPS
     Pr_Audio(T) = Pr(Xlis, Ylis);
     
     % STEP8 : Draw the graphics
-    if ~mod(T,500)
+    if ~mod(T,20)
         imagesc(Pr'*50, [-1,1]); colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
