@@ -13,8 +13,8 @@ function [refFrameBeta, xSrc, ySrc, xLis, yLis] = buildFrameBeta(domainW, domain
     Ny = domainH + 2*pmlLayer;
     
     % Default xSrc and ySrc value
-    xSrc = Nx/2;
-    ySrc = Ny/2;
+    xSrc = ceil(Nx/2);
+    ySrc = ceil(Ny/2);
     % STEP1: Create a single reference frame to define PML, Tube wall , source. 
     % And Initialize every cell of the frame as Air with beta = 1;
     refFrameBeta= ones(Nx, Ny);
@@ -29,121 +29,160 @@ function [refFrameBeta, xSrc, ySrc, xLis, yLis] = buildFrameBeta(domainW, domain
 
     % Begin: 
     
-    % [1] : Check if the tube has any horizontal length, but no vertical length  
+    % [1] : Check if the tube has any horizontal length, but no vertical length   
     if tubeHorizontalLength > 0 && tubeVerticalLength == 0
-        xStartUpperWall = floor(Nx/2) - round(tubeHorizontalLength/2);
-        xEndUpperWall   = floor(Nx/2) + (tubeHorizontalLength - round(tubeHorizontalLength/2));
         
-        xStartLowerWall = xStartUpperWall;
-        xEndLowerWall   = xEndUpperWall;
+		% Find the mid position
+		column_mid = xSrc;
+		row_mid = ySrc;
+		
+		% Tube wall coordinates
+		tubeStartRowPos_UpperWall = row_mid;
+		tubeStartColumnPos_UpperWall = column_mid;
+		
+		tubeEndRowPos_UpperWall = tubeStartRowPos_UpperWall;
+		tubeEndColumnPos_UpperWall = tubeStartColumnPos_UpperWall ...
+                                     + tubeHorizontalLength;
+				
+		tubeStartRowPos_LowerWall = tubeStartRowPos_UpperWall + tubeWidth;
+		tubeStartColumnPos_LowerWall = tubeStartColumnPos_UpperWall;
         
-        yStartUpperWall = floor(Ny/2);
-        yEndUpperWall = floor(Ny/2);
+        tubeEndRowPos_LowerWall = tubeStartRowPos_LowerWall;
+		tubeEndColumnPos_LowerWall = tubeEndColumnPos_UpperWall;
+		
+		% Build upper tube wall
+		refFrameBeta(tubeStartRowPos_UpperWall:tubeEndRowPos_UpperWall,...
+             tubeStartColumnPos_UpperWall:tubeEndColumnPos_UpperWall) = ...
+                betaTube;
+		
+		% Build lower tube wall
+        refFrameBeta(tubeStartRowPos_LowerWall:tubeEndRowPos_LowerWall,...
+             tubeStartColumnPos_LowerWall:tubeEndColumnPos_LowerWall) = ...
+                betaTube;
+            
+        % Build side tube wall
+        refFrameBeta(tubeStartRowPos_UpperWall:tubeStartRowPos_LowerWall,...
+             tubeStartColumnPos_UpperWall:tubeStartColumnPos_LowerWall) = ...
+             betaTube;
         
-        yStartLowerWall = yStartUpperWall + tubeWidth + 1;
-        yEndLowerWall   = yEndUpperWall   + tubeWidth + 1;
-        
-        % Build upper wall
-        refFrameBeta (xStartUpperWall:xEndUpperWall,...
-                     yStartUpperWall: yEndUpperWall) = betaTube;
-        
-        % Build lower wall
-        refFrameBeta (xStartLowerWall:xEndLowerWall,...
-                     yStartLowerWall: yEndLowerWall) = betaTube;
-                 
-        % Build left side wall
-        refFrameBeta (xStartLowerWall,...
-                     yStartUpperWall: yStartLowerWall) = betaTube;
-                 
-        % Find source coordinate inside the tube
-        xSrc = xStartLowerWall+1;
-        ySrc = round((yStartUpperWall + yStartLowerWall)/2);
+        % Find source position
+        xSrc = tubeStartRowPos_UpperWall + ceil(tubeWidth/2);
+        ySrc = tubeStartColumnPos_UpperWall + 1;
         
         % Find listener position
-        xLis = round((xEndUpperWall + xEndLowerWall)/2);
-        yLis = round((yEndUpperWall + yEndLowerWall)/2);
+        xLis = xSrc;
+        yLis = tubeEndColumnPos_UpperWall + 2;
     end
-   
+    
     % [2] Check if the tube has any vertical length, but not horizontal length
     if tubeHorizontalLength == 0 && tubeVerticalLength > 0
-        yStartLeftWall  = floor(Ny/2) - round(tubeVerticalLength/2);
-        yEndLeftWall    = floor(Nx/2) + (tubeVerticalLength - round(tubeVerticalLength/2));
+        % Find the mid position
+		column_mid = xSrc;
+		row_mid = ySrc;
         
-        yStartRightWall = yStartLeftWall;
-        yEndRightWall = yEndLeftWall;
+        % Tube wall coordinates
+        tubeStartRowPos_LeftWall = row_mid;
+        tubeStartColumnPos_LeftWall = column_mid;
         
-        xStartLeftWall = floor(Nx/2);
-        xEndLeftWall   = floor(Nx/2);
+        tubeEndRowPos_LeftWall = tubeStartRowPos_LeftWall +...
+                                 tubeVerticalLength;
+        tubeEndColumnPos_LeftWall = tubeStartColumnPos_LeftWall;
         
-        xStartRightWall =  xStartLeftWall + tubeWidth + 1;
-        xEndRightWall   =  xEndLeftWall + tubeWidth + 1;
+        tubeStartRowPos_RightWall = tubeStartRowPos_LeftWall; 
+        tubeStartColumnPos_RightWall = tubeStartColumnPos_LeftWall +...
+                                       tubeWidth;
+                                   
+        tubeEndRowPos_RightWall = tubeEndRowPos_LeftWall;
+        tubeEndColumnPos_RightWall = tubeStartColumnPos_RightWall;
         
-        % Build left wall
-        refFrameBeta(xStartLeftWall:xEndLeftWall,...
-                     yStartLeftWall:yEndLeftWall) = betaTube;
-                 
-        % Build right wall
-        refFrameBeta(xStartRightWall:xEndRightWall,...
-                     yStartRightWall:yEndRightWall) = betaTube;  
-                 
-        % Build lower wall
-        refFrameBeta(xEndLeftWall:xEndRightWall,...
-                     yEndLeftWall) = betaTube;
-                 
-        % Find source coordinate inside the tube
-        xSrc = round((xEndLeftWall + xEndRightWall)/2);
-        ySrc = yEndLeftWall-1;
-        
-        % Find listener position
-        xLis = round((xStartLeftWall + xStartRightWall)/2);
-        yLis = round((yStartLeftWall + yStartRightWall)/2);
+        % Build Left Wall
+        refFrameBeta(tubeStartRowPos_LeftWall:tubeEndRowPos_LeftWall,...
+                 tubeStartColumnPos_LeftWall:tubeEndColumnPos_LeftWall)=...
+                 betaTube;
+                
+        % Build Right Wall
+        refFrameBeta(tubeStartRowPos_RightWall:tubeEndRowPos_RightWall,...
+                 tubeStartColumnPos_RightWall:tubeEndColumnPos_RightWall)=...
+                 betaTube;
+                
+        % Build Lower Wall
+        refFrameBeta(tubeStartRowPos_LeftWall:tubeStartRowPos_RightWall,...
+                 tubeStartColumnPos_LeftWall:tubeStartColumnPos_RightWall)=...
+                 betaTube;
+             
+       % Find Source Position
+       xSrc = tubeStartRowPos_LeftWall +1;
+       ySrc = tubeStartColumnPos_LeftWall + ceil(tubeWidth/2);
+       
+       % Find Listener position
+       xLis = tubeEndRowPos_LeftWall + 2;
+       yLis = ySrc;                            
     end
     
     % [3] Check if the tube has both horizontal and vertical length
     if tubeHorizontalLength > 0 && tubeVerticalLength >0
-        xUpperStart  = floor(Nx/2) + (tubeHorizontalLength-...
-                                      round(tubeHorizontalLength/2));
-        yUpperStart  = Ny/2;
+        % Find the mid position
+        column_mid = xSrc;
+        row_mid = ySrc;
         
-        xUpperMiddle = floor(Nx/2) - round(tubeHorizontalLength/2);
-        yUpperMiddle = floor(Ny/2);
+        % Tube wall coordinates
+		tubeStartRowPos_UpperWall = row_mid;
+		tubeStartColumnPos_UpperWall = column_mid;
+		
+		tubeEndRowPos_UpperWall = tubeStartRowPos_UpperWall;
+		tubeEndColumnPos_UpperWall = tubeStartColumnPos_UpperWall ...
+                                     + tubeHorizontalLength;
+				
+		tubeStartRowPos_LowerWall = tubeStartRowPos_UpperWall + tubeWidth;
+		tubeStartColumnPos_LowerWall = tubeStartColumnPos_UpperWall + tubeWidth;
         
-        xLowerStart  = xUpperStart;
-        yLowerStart  = yUpperStart + tubeWidth+1;
+        tubeEndRowPos_LowerWall = tubeStartRowPos_LowerWall;
+		tubeEndColumnPos_LowerWall = tubeEndColumnPos_UpperWall;
         
-        xLowerMiddle = (xUpperMiddle + tubeWidth + 1);
-        yLowerMiddle = yUpperMiddle + tubeWidth + 1;
+        tubeStartRowPos_LeftWall = tubeStartRowPos_UpperWall;
+        tubeStartColumnPos_LeftWall = tubeStartColumnPos_UpperWall;
         
-        xUpperEnd    = xUpperMiddle;
-        yUpperEnd    = yUpperMiddle + tubeVerticalLength;
+        tubeEndRowPos_LeftWall = tubeStartRowPos_LeftWall +...
+                                 tubeVerticalLength;
+        tubeEndColumnPos_LeftWall = tubeStartColumnPos_LeftWall;
         
-        xLowerEnd    = xLowerMiddle;
-        yLowerEnd    = yUpperEnd;
+        tubeStartRowPos_RightWall = tubeStartRowPos_LowerWall; 
+        tubeStartColumnPos_RightWall = tubeStartColumnPos_LowerWall;
+                                   
+        tubeEndRowPos_RightWall = tubeEndRowPos_LeftWall;
+        tubeEndColumnPos_RightWall = tubeStartColumnPos_RightWall;
         
-        % Build Upper tube wall
-        refFrameBeta(xUpperEnd:xUpperMiddle,...
-                     yUpperMiddle:yUpperEnd) = betaTube;
-        refFrameBeta(xUpperMiddle:xUpperStart,...
-                     yUpperMiddle:yUpperStart)= betaTube;
-                 
-        % Build Lower tube wall
-        refFrameBeta(xLowerEnd:xLowerMiddle,...
-                     yLowerMiddle:yLowerEnd) = betaTube;
-                 
-        refFrameBeta(xLowerMiddle:xLowerStart,...
-                     yLowerMiddle:yLowerStart) = betaTube;
-                 
-        % Build side wall for vertical tube
-        refFrameBeta(xUpperEnd:xLowerEnd, yUpperEnd) = betaTube;
-        
-        % Find source coordinate inside the tube
-        xSrc = round((xUpperEnd+xLowerEnd)/2);
-        ySrc = yUpperEnd - 1;
-        
-        % Find listener position
-        xLis = round((xUpperStart + xLowerStart)/2);
-        yLis = round((yUpperStart + yLowerStart)/2);
+        % Build upper tube wall
+		refFrameBeta(tubeStartRowPos_UpperWall:tubeEndRowPos_UpperWall,...
+             tubeStartColumnPos_UpperWall:tubeEndColumnPos_UpperWall) = ...
+                betaTube;
+		
+		% Build lower tube wall
+        refFrameBeta(tubeStartRowPos_LowerWall:tubeEndRowPos_LowerWall,...
+             tubeStartColumnPos_LowerWall:tubeEndColumnPos_LowerWall) = ...
+                betaTube;
+            
+        % Build Left Wall
+        refFrameBeta(tubeStartRowPos_LeftWall:tubeEndRowPos_LeftWall,...
+                 tubeStartColumnPos_LeftWall:tubeEndColumnPos_LeftWall)=...
+                 betaTube;
+                
+        % Build Right Wall
+        refFrameBeta(tubeStartRowPos_RightWall:tubeEndRowPos_RightWall,...
+                 tubeStartColumnPos_RightWall:tubeEndColumnPos_RightWall)=...
+                 betaTube;
+                
+        % Build Lower Wall
+        refFrameBeta(tubeEndRowPos_LeftWall:tubeEndRowPos_RightWall,...
+                 tubeEndColumnPos_LeftWall:tubeEndColumnPos_RightWall)=...
+                 betaTube;
+             
+       % Find Source Position
+       xSrc = tubeEndRowPos_LeftWall -1;
+       ySrc = tubeEndColumnPos_LeftWall + ceil(tubeWidth/2);
+       
+       % Find Listener position
+       xLis = tubeStartRowPos_UpperWall + ceil(tubeWidth/2);
+       yLis = tubeEndColumnPos_UpperWall + 2;
     end
-    
-    return; 
 end
