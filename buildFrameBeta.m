@@ -15,6 +15,8 @@ function [refFrameBeta, xSrc, ySrc, xLis, yLis] = buildFrameBeta(domainW, domain
     % Default xSrc and ySrc value
     xSrc = ceil(Nx/2);
     ySrc = ceil(Ny/2);
+    xLis = xSrc;
+    yLis = ySrc;
     % STEP1: Create a single reference frame to define PML, Tube wall , source. 
     % And Initialize every cell of the frame as Air with beta = 1;
     refFrameBeta= ones(Nx, Ny);
