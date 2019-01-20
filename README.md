@@ -7,3 +7,6 @@
 
 <br><b>YouTube Link: </b>
 <br>[1] <a href = "https://www.youtube.com/watch?v=0wqWfBbIQtg">Arophones In Flatland: SIGGRAPH 2015 Talk</a>
+
+<br><b>[Note]:</b>
+<br> Please use the following code <u>aerophonesInFlatlandv2.m</u> for simulation. This file is not depended upon anyother files. To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.om
