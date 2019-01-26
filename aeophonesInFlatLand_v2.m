@@ -314,21 +314,21 @@ for T = 1:STEPS
     CyVy(1:frameH-2, 1:frameW-2)=(PV_N(2:frameH-1,2:frameW-1,3) - ...
                                   PV_N(3:frameH,2:frameW-1,3));
     % STEP2: Calculate Pr_next                           
-    Pr_next(1:frameH-2,1:frameH-2) = (PV_N(2:frameH-1,2:frameW-1, 1) - ((rho_sqrC_dt_invds.*(CxVx+CyVy))))./...
+    Pr_next(1:frameH-2,1:frameW-2) = (PV_N(2:frameH-1,2:frameW-1, 1) - ((rho_sqrC_dt_invds.*(CxVx+CyVy))))./...
                                      (1+PressureSigmaPrimedt);
     % STEP3: Copy Pr_next  to PV_Nplus1
     PV_Nplus1(2:frameH-1, 2:frameW-1,1) = Pr_next(:,:);
     
-    % STEP4: Calculate Vx & Vy
-    % To compute Vx we need calculate CxP = (del.P) = dPx/dx
-    % To compute Vy we need calculate CyP = (del.P) = dPy/dy
-    
+    % STEP4: Calculate Vx & Vy   
     CxP(1:frameH-2, 1:frameW-2) = (PV_Nplus1(2:frameH-1,3:frameW,1) - PV_Nplus1(2:frameH-1,2:frameW-1,1))/dx;
     CyP(1:frameH-2, 1:frameW-2) = (PV_Nplus1(1:frameH-2,2:frameW-1,1) - PV_Nplus1(2:frameH-1,2:frameW-1,1))/dy;
     
     
     Vx_next(1:frameH-2, 1:frameW-2) = (minVxBeta.*PV_N(2:frameH-1,2:frameW-1,2)- (betaVxSqr_dt_invRho.*CxP));                                
     Vy_next(1:frameH-2, 1:frameW-2) = (minVyBeta.*PV_N(2:frameH-1,2:frameW-1,3)- (betaVySqr_dt_invRho.*CyP));
+    
+    PV_Nplus1(2:frameH-1, 2:frameW-1,2) = Vx_next(:,:);
+    PV_Nplus1(2:frameH-1, 2:frameW-1,3) = Vy_next(:,:);
     
     for row_idx = 2:frameH-1
         for col_idx = 2: frameW-1
@@ -346,8 +346,8 @@ for T = 1:STEPS
             excitation_weight = [is_excitation(1) is_excitation(1)].*srcDirection(3:4) + [is_excitation(2) is_excitation(3)].*srcDirection(1:2);
 
             % Inject the source to the Vx_next and Vy_next = excitationV(T)
-            Vx_next(row_idx-1, col_idx-1) = Vx_next(row_idx-1, col_idx-1) + excitationV(T)*excitation_weight(1)*maxVxSigmaPrimedt(row_idx-1, col_idx-1);
-            Vy_next(row_idx-1, col_idx-1) = Vy_next(row_idx-1, col_idx-1) + excitationV(T)*excitation_weight(2)*maxVySigmaPrimedt(row_idx-1, col_idx-1);
+            PV_Nplus1(row_idx, col_idx, 2) = PV_Nplus1(row_idx, col_idx, 2) + excitationV(T)*excitation_weight(1)*maxVxSigmaPrimedt(row_idx-1, col_idx-1);
+            PV_Nplus1(row_idx, col_idx, 3) = PV_Nplus1(row_idx, col_idx, 3) + excitationV(T)*excitation_weight(2)*maxVySigmaPrimedt(row_idx-1, col_idx-1);
             
             % STEP6: Add absorbing boundary condition
             is_normal_dir = [beta(2) ~= cell_air, beta(3) ~= cell_air, beta(3) == cell_air, beta(2) == cell_air];
@@ -355,27 +355,28 @@ for T = 1:STEPS
             xor_term = [beta(2) * (1-beta(1)) , beta(1) * (1-beta(2)), beta(3) * (1-beta(1)), beta(1) * (1-beta(3))];
             
             N = [0.707106*is_normal_dir(3) + (1-is_normal_dir(3)), 0.707106*is_normal_dir(2) + (1-is_normal_dir(2)), ...
-            0.707106*is_normal_dir(4) + (1-is_normal_dir(4)), 0.707106*is_normal_dir(1) + (1-is_normal_dir(1))];
+                 0.707106*is_normal_dir(4) + (1-is_normal_dir(4)), 0.707106*is_normal_dir(1) + (1-is_normal_dir(1))];
         
             vb_alpha = [xor_term(2)*PV_Nplus1(row_idx,col_idx,1)*N(2) - xor_term(1)*PV_Nplus1(row_idx,col_idx+1,1)*N(1), ...
-                         xor_term(4)*PV_Nplus1(row_idx,col_idx,1)*N(4) - xor_term(3)*PV_Nplus1(row_idx-1,col_idx,1)*N(3)];
-                     
-            vb_alpha = vb_alpha * z_inv .* are_we_not_excitations;
+                        xor_term(4)*PV_Nplus1(row_idx,col_idx,1)*N(4) - xor_term(3)*PV_Nplus1(row_idx-1,col_idx,1)*N(3)];
+         
+            vb_alpha = (vb_alpha.* are_we_not_excitations)*z_inv;
+            
+            % Update Vx and Vy
+            PV_Nplus1(row_idx,col_idx,2) = PV_Nplus1(row_idx,col_idx,2) + maxVxSigmaPrimedt(row_idx-1,col_idx-1) * vb_alpha(1);
+            PV_Nplus1(row_idx,col_idx,3) = PV_Nplus1(row_idx,col_idx,3) + maxVySigmaPrimedt(row_idx-1,col_idx-1) * vb_alpha(2);
         end
     end
     
-    Vx_next = Vx_next + maxVxSigmaPrimedt * vb_alpha(1);
-    Vy_next = Vy_next + maxVySigmaPrimedt * vb_alpha(2);
+
     
-    Vx_next = Vx_next./(minVxBeta+maxVxSigmaPrimedt);
-    Vy_next = Vy_next./(minVyBeta+maxVySigmaPrimedt);
+    PV_Nplus1(2:frameH-1, 2:frameW-1,2) = PV_Nplus1(2:frameH-1, 2:frameW-1,2)./(minVxBeta+maxVxSigmaPrimedt);
+    PV_Nplus1(2:frameH-1, 2:frameW-1,3) = PV_Nplus1(2:frameH-1, 2:frameW-1,3)./(minVyBeta+maxVySigmaPrimedt);
     
-    % STEP6: Copy Vx_next & Vy_next  to PV_Nplus1
-    PV_Nplus1(2:frameH-1, 2:frameW-1,2) = Vx_next(:,:);
-    PV_Nplus1(2:frameH-1, 2:frameW-1,3) = Vy_next(:,:);
+    % STEP7: Re-store the grid cell type
     PV_Nplus1(2:frameH-1, 2:frameW-1,4) = PV_N(2:frameH-1, 2:frameW-1,4);
     
-    %STEP7: Pass out the border cell
+    %STEP8: Clear the border cell
     
     PV_Nplus1(:, 1, 1:3) = 0;
     PV_Nplus1(:, 1, 4) = PV_N(:, 1, 4);
@@ -389,7 +390,7 @@ for T = 1:STEPS
     PV_Nplus1(frameH, :, 1:3) = 0;
     PV_Nplus1(frameH, :, 4) = PV_N(frameH, :, 4); 
     
-    % STEP8: Plot wave simulation
+    % STEP9: Plot wave simulation
     if ~mod(T,1)
         imagesc(PV_Nplus1(:,:,1),[-2000 2000]); % colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
@@ -398,6 +399,6 @@ for T = 1:STEPS
         drawnow;
     end
     
-    % STEP9: Copy PV_Nplus1 to PV_N for the next time step
+    % STEP10: Copy PV_Nplus1 to PV_N for the next time step
     PV_N = PV_Nplus1;    
 end
