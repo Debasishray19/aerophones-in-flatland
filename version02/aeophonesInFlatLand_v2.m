@@ -1,22 +1,13 @@
 % Author: Debasish Ray Mohapatra
 % Date: 19 Jan, 2019
-% A special thanks to Victor Zappi whose guidance has
-% helped me a lot. To visit Victor Zappi's website: http://toomuchidle.com/
-
-% To run the code:
-% Please provide grid width and height. This code could be used to
-% simulate 3 possible cases: 
-% Choose 1 to simulate the acoustic propagation in a tube.
-% Choose 2 to simulate the acoustic propagation with a wall inside a grid
-% Choose any number to simulate open PML layers
-
-% This code is not depended upon any other files.
-% To inquiry or for bugs/suggestions please contact: debasishiter@gmail.com 
+% A special thanks to Victor Zappi who helped me to understand and
+% implement this code. To visit Victor Zappi's website: http://toomuchidle.com/
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INITIALIZE MATLAB ENVIRONMENT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-close all; clear;
+close all; 
+clear;
 clc;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,6 +72,7 @@ excitationX = floor(frameW/2);
 excitationY = floor(frameH/2);
 listenerX = excitationX;
 listenerY = excitationY;
+Pr_Audio = zeros(1, STEPS);
 
 % Define source size
 excitationH = 1;
@@ -90,6 +82,7 @@ excitationF = 440;        % Source frequency
 srcAmplitude =25;
 exeT = linspace(1, STEPS, STEPS);
 excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
+% excitationV = impulseResponse(srate, 1000000, 100, 22000);
 
 % Define source propagation direction
 % srcDirection index mean: 1 = Left
@@ -116,6 +109,7 @@ cell_dynamic    = 9;
 cell_dead       = 10;
 cell_numTypes   = 11;
 
+vis_Boundary = 2000;
 sigmadt = zeros(pmlLayer, 1);
 
 % To store beta(tube wall) and sigmaPrimedt(PML Layers). 
@@ -147,6 +141,7 @@ typeValues(:, cell_dead+1)    =  [0, 1000000];  % dead cell
 
 PV_N = zeros(frameH, frameW, 4); 
 PV_Nplus1  = zeros(frameH, frameW, 4);
+audio_Vis = zeros(frameH, frameW); % Dispaly this array during simmulation
 
 % Define cell type and store it in PV_N(,,4)
 % Declare all the cells as air by default
@@ -199,32 +194,46 @@ PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SIMULATION TYPES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-simulationType = input('Choose Simulation Type[1-TubeWall 2-VerticalWall]: ');
+simulationType = input('Choose Simulation Type[1-TubeWall 2-VerticalWall 3-BothEnd OpenTube]: ');
 
-% For fixed size tube-wall simulation
-if(simulationType==1)
-    % Check tube length
-    tubeLength = input('Enter tube length: ');
+switch simulationType
     
-    % Fix listener position
-    listenerX = excitationX + tubeLength;
-    listenerY = excitationY;
-    
-    %back walls
-    for i=0:excitationH+1
-        PV_N(excitationY-1+i, excitationX-1, 4) = cell_wall;
-    end
-    
-    %tube walls
-    for j=excitationX-1:listenerX-2
-        PV_N(excitationY-1, j, 4) = cell_wall;
-        PV_N(excitationY+excitationH, j, 4) = cell_wall;
-    end
-end
+    case 1 % For fixed size tube-wall simulation
+        % Check tube length
+        tubeLength = input('Enter tube length: ');
 
-% For vertical wall simulation
-if (simulationType==2)
-    PV_N(excitationY-1:excitationY+4, excitationX+4, 4) = cell_wall;
+        % Fix listener position
+        listenerX = excitationX + tubeLength;
+        listenerY = excitationY;
+
+        %back walls
+        for i=0:excitationH+1
+            PV_N(excitationY-1+i, excitationX-1, 4) = cell_wall;
+        end
+
+        %tube walls
+        for j=excitationX-1:listenerX-2
+            PV_N(excitationY-1, j, 4) = cell_wall;
+            PV_N(excitationY+excitationH, j, 4) = cell_wall;
+        end
+        
+    case 2 % For vertical wall simulation
+        PV_N(excitationY-1:excitationY+20, excitationX+20, 4) = cell_wall;
+        
+    case 3 % Both end open tube
+        % Check tube length
+        tubeLength = input('Enter tube length: ');
+        
+        % Fix listener position
+        listenerX = excitationX + tubeLength;
+        listenerY = excitationY;
+        
+        %tube walls
+        for j=excitationX-1:listenerX-2
+            PV_N(excitationY-1, j, 4) = cell_wall;
+            PV_N(excitationY+excitationH, j, 4) = cell_wall;
+        end        
+    otherwise
 end
 
 % Test the frame
@@ -319,7 +328,10 @@ for T = 1:STEPS
     % STEP3: Copy Pr_next  to PV_Nplus1
     PV_Nplus1(2:frameH-1, 2:frameW-1,1) = Pr_next(:,:);
     
-    % STEP4: Calculate Vx & Vy   
+    % STEP4: Calculate Vx & Vy
+    % To compute Vx we need calculate CxP = (del.P) = dPx/dx
+    % To compute Vy we need calculate CyP = (del.P) = dPy/dy
+    
     CxP(1:frameH-2, 1:frameW-2) = (PV_Nplus1(2:frameH-1,3:frameW,1) - PV_Nplus1(2:frameH-1,2:frameW-1,1))/dx;
     CyP(1:frameH-2, 1:frameW-2) = (PV_Nplus1(1:frameH-2,2:frameW-1,1) - PV_Nplus1(2:frameH-1,2:frameW-1,1))/dy;
     
@@ -390,9 +402,12 @@ for T = 1:STEPS
     PV_Nplus1(frameH, :, 1:3) = 0;
     PV_Nplus1(frameH, :, 4) = PV_N(frameH, :, 4); 
     
+    audio_Vis = PV_Nplus1(:,:,1);
+    audio_Vis(PV_Nplus1(:,:,4)==cell_wall) = vis_Boundary; % To visualize the obstacle
+    
     % STEP9: Plot wave simulation
-    if ~mod(T,1)
-        imagesc(PV_Nplus1(:,:,1),[-2000 2000]); % colorbar; % Multiplied with twenty to change the color code
+    if ~mod(T,1000)
+        imagesc(audio_Vis,[-1000 4000]);  colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
         title(['STEP NUMBER: ' num2str(T) ' OUT OF ' num2str(STEPS)]);
@@ -400,5 +415,6 @@ for T = 1:STEPS
     end
     
     % STEP10: Copy PV_Nplus1 to PV_N for the next time step
-    PV_N = PV_Nplus1;    
+    PV_N = PV_Nplus1; 
+    Pr_Audio(T) = PV_Nplus1(listenerY, listenerX,1);
 end
