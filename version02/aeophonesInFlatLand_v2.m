@@ -3,6 +3,8 @@
 % A special thanks to Victor Zappi who helped me to understand and
 % implement this code. To visit Victor Zappi's website: http://toomuchidle.com/
 
+% Source Implementation
+% To implement Sinusoidal wave or Impulse source, use: excitationV
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INITIALIZE MATLAB ENVIRONMENT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,8 +83,8 @@ excitationW = 1;
 excitationF = 440;        % Source frequency      
 srcAmplitude =25;
 exeT = linspace(1, STEPS, STEPS);
-excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
-% excitationV = impulseResponse(srate, 1000000, 100, 22000);
+% excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
+excitationV = impulseResponse(srate, 1000000, 100, 22000);
 
 % Define source propagation direction
 % srcDirection index mean: 1 = Left
@@ -203,7 +205,7 @@ switch simulationType
         tubeLength = input('Enter tube length: ');
 
         % Fix listener position
-        listenerX = excitationX + tubeLength;
+        listenerX = excitationX + tubeLength-1;
         listenerY = excitationY;
 
         %back walls
@@ -212,7 +214,7 @@ switch simulationType
         end
 
         %tube walls
-        for j=excitationX-1:listenerX-2
+        for j=excitationX-1:listenerX
             PV_N(excitationY-1, j, 4) = cell_wall;
             PV_N(excitationY+excitationH, j, 4) = cell_wall;
         end
@@ -325,10 +327,16 @@ for T = 1:STEPS
     % STEP2: Calculate Pr_next                           
     Pr_next(1:frameH-2,1:frameW-2) = (PV_N(2:frameH-1,2:frameW-1, 1) - ((rho_sqrC_dt_invds.*(CxVx+CyVy))))./...
                                      (1+PressureSigmaPrimedt);
+            
     % STEP3: Copy Pr_next  to PV_Nplus1
     PV_Nplus1(2:frameH-1, 2:frameW-1,1) = Pr_next(:,:);
     
-    % STEP4: Calculate Vx & Vy
+    % STEP4: Implement Dirichlet Booundary Condition at tube opening
+    for i=0:excitationH+1
+            PV_Nplus1(listenerY-1+i, listenerX+1, 1) = 0;
+    end
+    
+    % STEP5: Calculate Vx & Vy
     % To compute Vx we need calculate CxP = (del.P) = dPx/dx
     % To compute Vy we need calculate CyP = (del.P) = dPy/dy
     
@@ -349,7 +357,7 @@ for T = 1:STEPS
             typeIndex = cellTypes(:)+1;
             beta(:) = typeValues(1, typeIndex);
             
-            % STEP5: Add source velocity
+            % STEP6: Add source velocity
             % Verify the cell type is a cell_excitation or not
             is_excitation = [cellTypes(1) == cell_excitation, cellTypes(2) == cell_excitation, cellTypes(3) == cell_excitation];
             are_we_not_excitations = [ (1 - is_excitation(1)) * (1 - is_excitation(2)), (1 - is_excitation(1)) * (1 - is_excitation(3))];
@@ -361,7 +369,7 @@ for T = 1:STEPS
             PV_Nplus1(row_idx, col_idx, 2) = PV_Nplus1(row_idx, col_idx, 2) + excitationV(T)*excitation_weight(1)*maxVxSigmaPrimedt(row_idx-1, col_idx-1);
             PV_Nplus1(row_idx, col_idx, 3) = PV_Nplus1(row_idx, col_idx, 3) + excitationV(T)*excitation_weight(2)*maxVySigmaPrimedt(row_idx-1, col_idx-1);
             
-            % STEP6: Add absorbing boundary condition
+            % STEP7: Add absorbing boundary condition
             is_normal_dir = [beta(2) ~= cell_air, beta(3) ~= cell_air, beta(3) == cell_air, beta(2) == cell_air];
             
             xor_term = [beta(2) * (1-beta(1)) , beta(1) * (1-beta(2)), beta(3) * (1-beta(1)), beta(1) * (1-beta(3))];
@@ -385,10 +393,10 @@ for T = 1:STEPS
     PV_Nplus1(2:frameH-1, 2:frameW-1,2) = PV_Nplus1(2:frameH-1, 2:frameW-1,2)./(minVxBeta+maxVxSigmaPrimedt);
     PV_Nplus1(2:frameH-1, 2:frameW-1,3) = PV_Nplus1(2:frameH-1, 2:frameW-1,3)./(minVyBeta+maxVySigmaPrimedt);
     
-    % STEP7: Re-store the grid cell type
+    % STEP8: Re-store the grid cell type
     PV_Nplus1(2:frameH-1, 2:frameW-1,4) = PV_N(2:frameH-1, 2:frameW-1,4);
     
-    %STEP8: Clear the border cell
+    %STEP9: Clear the border cell
     
     PV_Nplus1(:, 1, 1:3) = 0;
     PV_Nplus1(:, 1, 4) = PV_N(:, 1, 4);
@@ -405,8 +413,8 @@ for T = 1:STEPS
     audio_Vis = PV_Nplus1(:,:,1);
     audio_Vis(PV_Nplus1(:,:,4)==cell_wall) = vis_Boundary; % To visualize the obstacle
     
-    % STEP9: Plot wave simulation
-    if ~mod(T,1000)
+    % STEP10: Plot wave simulation
+    if ~mod(T,1)
         imagesc(audio_Vis,[-1000 4000]);  colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
