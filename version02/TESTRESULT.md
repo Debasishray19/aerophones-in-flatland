@@ -1,6 +1,6 @@
 # Aerophones In Flatland - Test Procedure And Test Result
 
-<b >Running Code</b>.
+<b>Running Code:</b>
 <br>1. Main File: aeophonesInFlatLand_v2.m
 <br>2. To inject impulse as source use the following MATLAB file: <i>impulseResponse.m</i> and comment the following code in  <i>aeophonesInFlatLand_v2.m </i>
 ```diff
