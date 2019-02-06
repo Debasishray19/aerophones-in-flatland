@@ -227,11 +227,11 @@ switch simulationType
         tubeLength = input('Enter tube length: ');
         
         % Fix listener position
-        listenerX = excitationX + tubeLength;
+        listenerX = excitationX + tubeLength-1;
         listenerY = excitationY;
         
         %tube walls
-        for j=excitationX-1:listenerX-2
+        for j=excitationX-1:listenerX
             PV_N(excitationY-1, j, 4) = cell_wall;
             PV_N(excitationY+excitationH, j, 4) = cell_wall;
         end        
@@ -331,9 +331,10 @@ for T = 1:STEPS
     % STEP3: Copy Pr_next  to PV_Nplus1
     PV_Nplus1(2:frameH-1, 2:frameW-1,1) = Pr_next(:,:);
     
-    % STEP4: Implement Dirichlet Booundary Condition at tube opening
+    % STEP4: Implement Dirichlet Booundary Condition
     for i=0:excitationH+1
             PV_Nplus1(listenerY-1+i, listenerX+1, 1) = 0;
+            PV_Nplus1(excitationY-1+i, excitationX-2, 1) = 0;
     end
     
     % STEP5: Calculate Vx & Vy
