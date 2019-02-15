@@ -16,7 +16,7 @@ clc;
 %% DEFINE UNITS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 meter = 1;
-centimeter  =1e-2;
+centimeter  =1e-2 * meter;
 
 second    = 1;
 hertz     = 1/second;
@@ -31,11 +31,11 @@ kilogram  = 1e3*gram;
 %% DEFINE CONSTANTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rho = 1.140*kilogram/(meter^3);   % Air density  [kg/m^3]
-sarte_mul = 1;                     % srate multiplier
+srate_mul = 5;                     % srate multiplier
 c   = 350*meter/second;            % Sound speed in air [m/s]
 maxSigmadt = 0.5;                  % Attenuation coefficient at the PML layer
 alpha = 0.004;                     % Reflection coefficient
-srate = 44100*sarte_mul;           % Sample frequency
+srate = 44100*srate_mul;           % Sample frequency
 z_inv = 1 / (rho*c*( (1+sqrt(1-alpha))/(1-sqrt(1-alpha)) ));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DASHBOARD
@@ -45,6 +45,7 @@ dx = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL C
 dy = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
 AudioTime = 1*second;              % Total audio signal time
 kappa = rho*c*c;                   % Bulk modulus
+ds = dx;                           % Spatial resolution(ds) = dx = dy
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GRID CELL CONSTRUCTION : DEFINE SIGMA AND BETA VALUE FOR EACH CELL
@@ -83,16 +84,16 @@ excitationW = 1;
 excitationF = 440;        % Source frequency      
 srcAmplitude =25;
 exeT = linspace(1, STEPS, STEPS);
-% excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
+%excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
 excitationV = impulseResponse(srate, 1000000, 100, 22000);
 
 % Define source propagation direction
-% srcDirection index mean: 1 = Left
-%                          2 = Down
-%                          3 = Right
-%                          4 = Up
+% srcDirection index mean: 1 = Left  = -1
+%                          2 = Down  = -1
+%                          3 = Right = 1
+%                          4 = Up    = 1
 
-srcDirection = [-1 -1 1 1];
+srcDirection = [0 0 1 0]; % For all the direction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DEFINE CELL TYPE [Not going to use 'cell_dynamics']
@@ -109,7 +110,8 @@ cell_pml4       = 7;
 cell_pml5       = 8;
 cell_dynamic    = 9;
 cell_dead       = 10;
-cell_numTypes   = 11;
+cell_noPressure = 11; % To implement Dirichlet boundary condition
+cell_numTypes   = 12;
 
 vis_Boundary = 2000;
 sigmadt = zeros(pmlLayer, 1);
@@ -125,6 +127,7 @@ sigmadt = zeros(pmlLayer, 1);
 typeValues = zeros(2, cell_numTypes);
 typeValues(:, cell_wall+1) = [0, dt];
 typeValues(:, cell_air+1) = [1, 0];         % air
+typeValues(:, cell_noPressure+1) = [1, 0];         % air
 typeValues(:, cell_excitation+1) = [0, dt]; % excitation
 
 % Define sigma for PMLLayers 
@@ -189,25 +192,34 @@ for pmlCount = 1:pmlLayer
     cellType = cellType-1;
 end
 
-% Defining source cell type
-cellType = cell_excitation;
-PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SIMULATION TYPES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-simulationType = input('Choose Simulation Type[1-TubeWall 2-VerticalWall 3-BothEnd OpenTube]: ');
+simulationType = input('Choose Simulation Type[0-PML Layers 1-TubeWall 2-VerticalWall 3-BothEnd OpenTube 4-VowelSound]: ');
 
 switch simulationType
+    case 0
+        % Defining source cell type
+        cellType = cell_excitation;
+        PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
     
     case 1 % For fixed size tube-wall simulation
+        % Defining source cell type
+        cellType = cell_excitation;
+        PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
+        
         % Check tube length
         tubeLength = input('Enter tube length: ');
 
         % Fix listener position
         listenerX = excitationX + tubeLength-1;
         listenerY = excitationY;
-
+        
+        % To implement Dirichlet Boundary Condition define cell_type
+        for i=0:excitationH+1
+                PV_N(listenerY-1+i, listenerX+1, 4) = cell_noPressure;
+        end
+        
         %back walls
         for i=0:excitationH+1
             PV_N(excitationY-1+i, excitationX-1, 4) = cell_wall;
@@ -220,9 +232,16 @@ switch simulationType
         end
         
     case 2 % For vertical wall simulation
+        % Defining source cell type
+        cellType = cell_excitation;
+        PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
         PV_N(excitationY-1:excitationY+20, excitationX+20, 4) = cell_wall;
         
     case 3 % Both end open tube
+        % Defining source cell type
+        cellType = cell_excitation;
+        PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
+        
         % Check tube length
         tubeLength = input('Enter tube length: ');
         
@@ -230,11 +249,38 @@ switch simulationType
         listenerX = excitationX + tubeLength-1;
         listenerY = excitationY;
         
+        % To implement Dirichlet Boundary Condition define cell_type
+        for i=0:excitationH+1
+                PV_N(listenerY-1+i, listenerX+1, 4) = cell_noPressure;
+                %PV_N(excitationY-1+i, excitationX-1, 4) = cell_noPressure;
+        end
+        
         %tube walls
-        for j=excitationX-1:listenerX
+        for j=excitationX:listenerX
             PV_N(excitationY-1, j, 4) = cell_wall;
             PV_N(excitationY+excitationH, j, 4) = cell_wall;
-        end        
+        end
+        
+    case 4 % For vowel sound
+        vowelSound = input('Choose vowels [1-\a\ 2-\u\ 3-\i\]: ');
+        
+        % Keep asking user for wrong input
+        while vowelSound<1 || vowelSound>3
+            disp('Give correct input')
+            vowelSound = input('Choose vowels [1-\a\ 2-\u\ 3-\i\]: ');
+        end
+        
+        % Generate the Tube Shape
+        if vowelSound == 1
+           [listenerX, listenerY, PV_N(:,:,4)] = ...
+           aaCrossSectionTube(frameH, frameW, ds, cell_wall, cell_air, cell_excitation, cell_noPressure);
+        elseif vowelSound == 2
+           [listenerX, listenerY, PV_N(:,:,4)] = ...
+           uuCrossSectionTube(frameH, frameW, ds, cell_wall, cell_air, cell_excitation, cell_noPressure);
+        else
+           [listenerX, listenerY, PV_N(:,:,4)] = ...
+           eeCrossSectionTube(frameH, frameW, ds, cell_wall, cell_air, cell_excitation, cell_noPressure);
+        end      
     otherwise
 end
 
@@ -331,12 +377,10 @@ for T = 1:STEPS
     % STEP3: Copy Pr_next  to PV_Nplus1
     PV_Nplus1(2:frameH-1, 2:frameW-1,1) = Pr_next(:,:);
     
-    % STEP4: Implement Dirichlet Booundary Condition
-    for i=0:excitationH+1
-            PV_Nplus1(listenerY-1+i, listenerX+1, 1) = 0;
-            PV_Nplus1(excitationY-1+i, excitationX-2, 1) = 0;
-    end
-    
+    % STEP4: Implement Dirichlet Boundary Condition
+    checkPresCond = PV_N(:,:,4)~=cell_noPressure;
+    PV_Nplus1(:,:,1) = PV_Nplus1(:,:,1).*checkPresCond;
+        
     % STEP5: Calculate Vx & Vy
     % To compute Vx we need calculate CxP = (del.P) = dPx/dx
     % To compute Vy we need calculate CyP = (del.P) = dPy/dy
@@ -423,7 +467,7 @@ for T = 1:STEPS
         drawnow;
     end
     
-    % STEP10: Copy PV_Nplus1 to PV_N for the next time step
+    % STEP11: Copy PV_Nplus1 to PV_N for the next time step
     PV_N = PV_Nplus1; 
     Pr_Audio(T) = PV_Nplus1(listenerY, listenerX,1);
 end
