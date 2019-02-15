@@ -1,12 +1,14 @@
-# Aerophones In Flatland
+# Aerophones In Flatland - Test Procedure And Test Result
 
-[1] <a href ="https://dl.acm.org/citation.cfm?id=2767001">"Aerophones in flatland: Interactive Wave Simulation Of Wind Instruments"</a>  by Andrew Allen, Nikunj Raghuvansi. 
-<br>[2] <a href = "https://asa.scitation.org/doi/abs/10.1121/2.0000395">"Towards real-time two-dimensional wave propagation for articulatory speech synthesis"</a> by Victor Zappi, Arvind Vasuvedan, Andrew Allen, Nikunj Raghuvansi and Sidney Fels.
-<br>[3]<a href="https://asa.scitation.org/doi/full/10.1121/1.3502470">"Acoustic Analysis of the vocal tract during vowel production by finite-difference time-domain method"</a> by Hironori Takemoto and Parham Mokhtari.
-<br>[4]<a href = "https://www.jstage.jst.go.jp/article/ast/23/1/23_1_40/_article/-char/ja/">"Visualization of sound propagation and scattering in rooms"</a> by Takatoshi Yokota, Shinichi Sakamoto and Hideki Tachibana
+<b>Running Code:</b>
+<br>1. Main File: aeophonesInFlatLand_v2.m
+<br>2. To inject impulse as source use the following MATLAB file: <i>impulseResponse.m</i> and comment the following code in  <i>aeophonesInFlatLand_v2.m </i>
+```diff
+- excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
+```
+<br>3. To verify the frequency response of audio data inlude the MATLAB file: <i>audioGenfunc.m</i> and run the following code line
+```diff
++ audioGenfunc(Pr_Audio, excitationV);
+```
 
-<br><b>YouTube Link: </b>
-<br>[1] <a href = "https://www.youtube.com/watch?v=0wqWfBbIQtg">Arophones In Flatland: SIGGRAPH 2015 Talk</a>
 
-<br><b>[Note]:</b>
-<br> Please use the following code <u>aerophonesInFlatlandv2.m</u> for simulation. This file is not depended upon anyother files. To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.om
