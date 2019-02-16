@@ -246,7 +246,7 @@ switch simulationType
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Define PML Layers and Dynamic Cell
+%% Define PML Layer Cells and Dead Cells
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Then modify as per the requirement
 % Define cell_dead
