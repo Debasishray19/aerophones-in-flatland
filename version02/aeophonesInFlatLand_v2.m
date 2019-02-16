@@ -31,7 +31,7 @@ kilogram  = 1e3*gram;
 %% DEFINE CONSTANTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rho = 1.140*kilogram/(meter^3);   % Air density  [kg/m^3]
-srate_mul = 5;                     % srate multiplier
+srate_mul = input('Enter the sample rate: ');                     % srate multiplier
 c   = 350*meter/second;            % Sound speed in air [m/s]
 maxSigmadt = 0.5;                  % Attenuation coefficient at the PML layer
 alpha = 0.004;                     % Reflection coefficient
@@ -152,50 +152,11 @@ audio_Vis = zeros(frameH, frameW); % Dispaly this array during simmulation
 % Declare all the cells as air by default
 PV_N(1:frameH, 1:frameW, 4) = cell_air;
 
-% Then modify as per the requirement
-% Define cell_dead
-PV_N(1:frameH,1,4) = cell_dead;
-PV_N(1:frameH,frameW,4) = cell_dead;
-PV_N(1,1:frameW,4) = cell_dead;
-PV_N(frameH,1:frameW,4) = cell_dead;
-
-% Define horizontal PML layers - Start from the outer layers
-% -----Horizontal PML Layers-------
-cellType = cell_pml5;
-yShift = 1;
-xStart = 2;
-xEnd = frameW-1;
-
-for pmlCount = 1:pmlLayer   
-    for hCount = xStart:xEnd
-        PV_N(yShift+pmlCount, hCount, 4) = cellType;
-        PV_N(frameH-pmlCount, hCount, 4) = cellType;
-    end   
-    xStart = xStart+1;
-    xEnd = xEnd-1;
-    cellType = cellType-1;
-end
-
-% -----Vertical PML Layers-------
-cellType = cell_pml5;
-xShift = 1;
-yStart = 2;
-yEnd = frameH-1;
-for pmlCount = 1:pmlLayer
-    for vCount = yStart:yEnd
-        PV_N(vCount, xShift+pmlCount, 4) = cellType;
-        PV_N(vCount, frameW-pmlCount, 4) = cellType;
-    end
-    
-    yStart = yStart+1;
-    yEnd = yEnd-1;
-    cellType = cellType-1;
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SIMULATION TYPES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-simulationType = input('Choose Simulation Type[0-PML Layers 1-TubeWall 2-VerticalWall 3-BothEnd OpenTube 4-VowelSound]: ');
+simulationType = input('Choose Simulation Type[0-Open Space 1-TubeWall 2-VerticalWall 3-BothEnd OpenTube 4-VowelSound]: ');
 
 switch simulationType
     case 0
@@ -282,6 +243,54 @@ switch simulationType
            eeCrossSectionTube(frameH, frameW, ds, cell_wall, cell_air, cell_excitation, cell_noPressure);
         end      
     otherwise
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Define PML Layers and Dynamic Cell
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Then modify as per the requirement
+% Define cell_dead
+PV_N(1:frameH,1,4) = cell_dead;
+PV_N(1:frameH,frameW,4) = cell_dead;
+PV_N(1,1:frameW,4) = cell_dead;
+PV_N(frameH,1:frameW,4) = cell_dead;
+
+
+pmlSwitch = input('Swicth ON PML Layers. Press 1:ON 0:OFF = ');
+if pmlSwitch == 1 
+    
+    % Define horizontal PML layers - Start from the outer layers
+    % -----Activate horizontal PML Layers-------
+    cellType = cell_pml5;
+    yShift = 1;
+    xStart = 2;
+    xEnd = frameW-1;
+
+    for pmlCount = 1:pmlLayer   
+        for hCount = xStart:xEnd
+            PV_N(yShift+pmlCount, hCount, 4) = cellType;
+            PV_N(frameH-pmlCount, hCount, 4) = cellType;
+        end   
+        xStart = xStart+1;
+        xEnd = xEnd-1;
+        cellType = cellType-1;
+    end
+
+    % -----Activate vertical PML Layers-------
+    cellType = cell_pml5;
+    xShift = 1;
+    yStart = 2;
+    yEnd = frameH-1;
+    for pmlCount = 1:pmlLayer
+        for vCount = yStart:yEnd
+            PV_N(vCount, xShift+pmlCount, 4) = cellType;
+            PV_N(vCount, frameW-pmlCount, 4) = cellType;
+        end
+
+        yStart = yStart+1;
+        yEnd = yEnd-1;
+        cellType = cellType-1;
+    end
 end
 
 % Test the frame
