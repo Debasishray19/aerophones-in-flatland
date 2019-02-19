@@ -19,6 +19,7 @@ meter = 1;
 centimeter  =1e-2 * meter;
 
 second    = 1;
+milisecond = 1e-3 * second;
 hertz     = 1/second;
 kilohertz = 1e3 * hertz;
 megahertz = 1e6 * hertz;
@@ -31,51 +32,34 @@ kilogram  = 1e3*gram;
 %% DEFINE CONSTANTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rho = 1.140*kilogram/(meter^3);   % Air density  [kg/m^3]
-srate_mul = input('Enter the sample rate: ');                     % srate multiplier
+srate_mul = input('Enter the sample rate multiplier: ');                     % srate multiplier
 c   = 350*meter/second;            % Sound speed in air [m/s]
 maxSigmadt = 0.5;                  % Attenuation coefficient at the PML layer
-alpha = 0.004;                     % Reflection coefficient
+alpha = 0.008;                     % Reflection coefficient
 srate = 44100*srate_mul;           % Sample frequency
 z_inv = 1 / (rho*c*( (1+sqrt(1-alpha))/(1-sqrt(1-alpha)) ));
+pmlLayer = 6; % Number of PML layers
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DASHBOARD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dt = 1/srate;                      % Temporal resolution/ sample time period
 dx = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
 dy = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
-AudioTime = 1*second;              % Total audio signal time
+AudioTime = 50*milisecond;              % Total audio signal time
 kappa = rho*c*c;                   % Bulk modulus
 ds = dx;                           % Spatial resolution(ds) = dx = dy
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% GRID CELL CONSTRUCTION : DEFINE SIGMA AND BETA VALUE FOR EACH CELL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% domainW an domainH signifies the size of problem space
-domainW = input('Enter domain width: ');
-domainH = input('Enter domain height: ');
-
-% Number of PML layers
-pmlLayer = 6; % Note: Make it a variable [Next Change]
-
-% Build frame [Frame = Domain Size + PML Layers]
-frameW = domainW+2*pmlLayer+2; % 2 is for border/dead cells
-frameH = domainH+2*pmlLayer+2; % 2 is for border/dead cells
- 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SIMULATION TIME
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 t = 0:dt:AudioTime-dt;            % time steps
 STEPS = length(t);                % Total time steps
+Pr_Audio = zeros(1, STEPS);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SOURCE PARAMETERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Define source position
-excitationX = floor(frameW/2);  
-excitationY = floor(frameH/2);
-listenerX = excitationX;
-listenerY = excitationY;
-Pr_Audio = zeros(1, STEPS);
 
 % Define source size
 excitationH = 1;
@@ -85,7 +69,7 @@ excitationF = 440;        % Source frequency
 srcAmplitude =25;
 exeT = linspace(1, STEPS, STEPS);
 %excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
-excitationV = impulseResponse(srate, 1000000, 100, 22000);
+excitationV = impulseResponse(srate, 1000000, 2, 22000);
 
 % Define source propagation direction
 % srcDirection index mean: 1 = Left  = -1
@@ -138,33 +122,54 @@ end
 typeValues(:, cell_dead+1)    =  [0, 1000000];  % dead cell
 
 
-% For pressure and velocity
-% PV_N(:,:,1) = To store cell pressure
-% PV_N(:,:,2) = To store Vx
-% PV_N(:,:,3) = To store Vy
-% PV_N(:,:,4) = To store grid cell type
-
-PV_N = zeros(frameH, frameW, 4); 
-PV_Nplus1  = zeros(frameH, frameW, 4);
-audio_Vis = zeros(frameH, frameW); % Dispaly this array during simmulation
-
-% Define cell type and store it in PV_N(,,4)
-% Declare all the cells as air by default
-PV_N(1:frameH, 1:frameW, 4) = cell_air;
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SIMULATION TYPES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 simulationType = input('Choose Simulation Type[0-Open Space 1-TubeWall 2-VerticalWall 3-BothEnd OpenTube 4-VowelSound]: ');
+pmlSwitch = input('Swicth ON PML Layers. Press 1:ON 0:OFF = ');
 
 switch simulationType
-    case 0
+    case 0 % For open air space simulation
+        % domainW an domainH signifies the size of problem space
+        domainW = input('Enter domain width: ');
+        domainH = input('Enter domain height: ');
+        
+        % Create the frame
+        [PV_N, frameH, frameW] = frameConstruction(domainH, domainW, pmlSwitch, pmlLayer);
+        
+        % Define cell type and store it in PV_N(,,4)
+        % Declare all the cells as air by default
+        PV_N(1:frameH, 1:frameW, 4) = cell_air;
+        
+        % Define source position
+        excitationX = floor(frameW/2);  
+        excitationY = floor(frameH/2);
+        
+        % Define Listener postion
+        listenerX = excitationX;
+        listenerY = excitationY;
+
         % Defining source cell type
         cellType = cell_excitation;
         PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
     
     case 1 % For fixed size tube-wall simulation
+        
+        % domainW an domainH signifies the size of problem space
+        domainW = input('Enter domain width: ');
+        domainH = input('Enter domain height: ');
+        
+        % Create the frame
+        [PV_N, frameH, frameW] = frameConstruction(domainH, domainW, pmlSwitch, pmlLayer);
+        
+        % Define cell type and store it in PV_N(,,4)
+        % Declare all the cells as air by default
+        PV_N(1:frameH, 1:frameW, 4) = cell_air;
+        
+        % Define source position
+        excitationX = floor(frameW/2);  
+        excitationY = floor(frameH/2);
+        
         % Defining source cell type
         cellType = cell_excitation;
         PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
@@ -193,12 +198,48 @@ switch simulationType
         end
         
     case 2 % For vertical wall simulation
+        
+        % domainW an domainH signifies the size of problem space
+        domainW = input('Enter domain width: ');
+        domainH = input('Enter domain height: ');
+        
+        % Create the frame
+        [PV_N, frameH, frameW] = frameConstruction(domainH, domainW, pmlSwitch, pmlLayer);
+        
+        % Define cell type and store it in PV_N(,,4)
+        % Declare all the cells as air by default
+        PV_N(1:frameH, 1:frameW, 4) = cell_air;
+        
+        % Define source position
+        excitationX = floor(frameW/2);  
+        excitationY = floor(frameH/2);
+        
+        % Define Listener postion
+        listenerX = excitationX;
+        listenerY = excitationY;
+        
         % Defining source cell type
         cellType = cell_excitation;
         PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
         PV_N(excitationY-1:excitationY+20, excitationX+20, 4) = cell_wall;
         
     case 3 % Both end open tube
+        
+        % domainW an domainH signifies the size of problem space
+        domainW = input('Enter domain width: ');
+        domainH = input('Enter domain height: ');
+        
+        % Create the frame
+        [PV_N, frameH, frameW] = frameConstruction(domainH, domainW, pmlSwitch, pmlLayer);
+        
+        % Define cell type and store it in PV_N(,,4)
+        % Declare all the cells as air by default
+        PV_N(1:frameH, 1:frameW, 4) = cell_air;
+        
+        % Define source position
+        excitationX = floor(frameW/2);  
+        excitationY = floor(frameH/2);
+        
         % Defining source cell type
         cellType = cell_excitation;
         PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
@@ -233,14 +274,14 @@ switch simulationType
         
         % Generate the Tube Shape
         if vowelSound == 1
-           [listenerX, listenerY, PV_N(:,:,4)] = ...
-           aaCrossSectionTube(frameH, frameW, ds, cell_wall, cell_air, cell_excitation, cell_noPressure);
+           [listenerX, listenerY, frameH, frameW, PV_N] = ...
+           aaCrossSectionTube(pmlSwitch, ds, pmlLayer, cell_wall, cell_air, cell_excitation, cell_noPressure);
         elseif vowelSound == 2
-           [listenerX, listenerY, PV_N(:,:,4)] = ...
-           uuCrossSectionTube(frameH, frameW, ds, cell_wall, cell_air, cell_excitation, cell_noPressure);
+           [listenerX, listenerY, frameH, frameW, PV_N] = ...
+           uuCrossSectionTube(pmlSwitch, ds, pmlLayer, cell_wall, cell_air, cell_excitation, cell_noPressure);
         else
-           [listenerX, listenerY, PV_N(:,:,4)] = ...
-           eeCrossSectionTube(frameH, frameW, ds, cell_wall, cell_air, cell_excitation, cell_noPressure);
+           [listenerX, listenerY, frameH, frameW, PV_N] = ...
+           eeCrossSectionTube(pmlSwitch, ds, pmlLayer, cell_wall, cell_air, cell_excitation, cell_noPressure);
         end      
     otherwise
 end
@@ -255,8 +296,6 @@ PV_N(1:frameH,frameW,4) = cell_dead;
 PV_N(1,1:frameW,4) = cell_dead;
 PV_N(frameH,1:frameW,4) = cell_dead;
 
-
-pmlSwitch = input('Swicth ON PML Layers. Press 1:ON 0:OFF = ');
 if pmlSwitch == 1 
     
     % Define horizontal PML layers - Start from the outer layers
@@ -354,6 +393,9 @@ rho_sqrC_dt_invds = (kappa*dt)/dx;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FDTD PARAMETERS - PART II (INITIALISING FIELD)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PV_Nplus1  = zeros(frameH, frameW, 4);
+audio_Vis = zeros(frameH, frameW); % Dispaly this array during simmulation
+
 CxVx    = zeros(frameH-2,frameW-2);
 CyVy    = zeros(frameH-2,frameW-2);
 CxP     = zeros(frameH-2,frameW-2);
@@ -366,7 +408,6 @@ Vy_next = zeros(frameH-2,frameW-2);
 figure;
 %hImg = imagesc(PV_Nplus1(:,:,1), clims); %VIC in matlab can remove this
 % title('Simulation');
-
 
 for T = 1:STEPS
     
