@@ -509,7 +509,7 @@ for T = 1:STEPS
     audio_Vis(PV_Nplus1(:,:,4)==cell_wall) = vis_Boundary; % To visualize the obstacle
     
     % STEP10: Plot wave simulation
-    if ~mod(T,1)
+    if ~mod(T,1000)
         imagesc(audio_Vis,[-1000 4000]);  colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
