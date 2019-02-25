@@ -10,7 +10,7 @@ function frequencyPlot(audioSignal, srate)
 
     figure
     plot(f,audiosignalfft); % plot Fourier Transform
-    Title('Spectrum Analysis');
+    title('Spectrum Analysis');
     xlabel('Frequency [Hz]');
     ylabel('Magnitude [dB]');
     axis 'auto y'
