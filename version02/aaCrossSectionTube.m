@@ -12,12 +12,14 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
     % Define units
     meter = 1;
     centimeter = 1e-2*meter;
-    
+    cellHalfLen = ds/2;
+	
     % Vocal tract parameters
     sectional_length = 0.00388; % in meter
     numSections = 44;
+    diameter_mul = 1;
     
-    %STEP0: Convert the 3D area function vecor to 2D
+    %STEP0: Convert the 3D area function vector to 2D
     % Tube section area in cm^2 in 3D
     tubeSectionArea_incm2_3D = [0.56 0.62 0.66 0.78 ...
                                 0.97 1.16 1.12 0.82 ...
@@ -39,21 +41,23 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
         
     % Tube section diameter in cm^2 in 2D
     % Create the array 
-    tubeSectionDiamete_2D = zeros(1, numSections);
+    tubeSectionDiameter_2D = zeros(1, numSections);
     
     % Find out the maxium diameter in 3D and it's index
     [maxDiameter, maxDiameterIdx] = max(tubeSectionDiameter_3D);
     
-    % Assign the updated diameter to the tubeSectionDiamete_2D for the same
+    % Assign the updated diameter to the tubeSectionDiameter_2D for the same
     % index position: d_2D = d3D(0.5*pi/1.84)   
-    tubeSectionDiamete_2D(maxDiameterIdx) = (maxDiameter*0.5*pi)/1.84;
+    tubeSectionDiameter_2D(maxDiameterIdx) = (maxDiameter*0.5*pi)/1.84;
     
-    % To Assign other diameters for tubeSectionDiamete_2D implement
+    % To Assign other diameters for tubeSectionDiameter_2D implement
     % eqn -(3a) and (3b) from the foloowing paper:
     % Two dimensional vocal tracts with three dimensional behaviour in the
     % numerical generation of vowels.
     
     % Store the value of m in an array - are expansion ratio
+    % The variable 'm' has been named as per the parameters named in the
+    % paper to avoid confusion
     m = ones(1, numSections);
     
     % Loop to define m value
@@ -74,22 +78,22 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
     radiiLessMaxIdx = maxDiameterIdx;
     
     while radiiLessMaxIdx > 1
-        tubeSectionDiamete_2D(radiiLessMaxIdx-1) = ...
-        tubeSectionDiamete_2D(radiiLessMaxIdx) * m(radiiLessMaxIdx-1);
+        tubeSectionDiameter_2D(radiiLessMaxIdx-1) = ...
+        tubeSectionDiameter_2D(radiiLessMaxIdx) * m(radiiLessMaxIdx-1);
     
         radiiLessMaxIdx = radiiLessMaxIdx - 1;
     end
     
     radiiGreaterMaxIdx = maxDiameterIdx;
     while radiiGreaterMaxIdx < numSections
-        tubeSectionDiamete_2D(radiiGreaterMaxIdx+1) = ...
-        tubeSectionDiamete_2D(radiiGreaterMaxIdx) * m(radiiGreaterMaxIdx+1);
+        tubeSectionDiameter_2D(radiiGreaterMaxIdx+1) = ...
+        tubeSectionDiameter_2D(radiiGreaterMaxIdx) * m(radiiGreaterMaxIdx+1);
     
         radiiGreaterMaxIdx = radiiGreaterMaxIdx + 1;
     end
        
     % Tube section diameter in terms of number of grid cell
-    tubeSectionDiameterCells = round(tubeSectionDiamete_2D./ds);
+    tubeSectionDiameterCells = round(tubeSectionDiameter_2D./ds);
     
     % Change the tube diameter to 1 if it contains 0
     tubeSectionDiameterCells(tubeSectionDiameterCells==0)=1;
@@ -101,7 +105,7 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
             
             % Find the difference between rounded and actual diameter value
             diff = tubeSectionDiameterCells(diameterCounter) - ...
-                    (tubeSectionDiamete_2D(diameterCounter)/ds);            
+                    (tubeSectionDiameter_2D(diameterCounter)/ds);            
             
             if diff>0
                 tubeSectionDiameterCells(diameterCounter) = ...
@@ -112,7 +116,9 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
             end
         end   
     end
-       
+      
+    tubeSectionDiameterCells = tubeSectionDiameterCells.*diameter_mul;
+    
     % STEP2: Find the total tube length and calculate the percentage error 
     % in the approximated tube length
 
@@ -126,7 +132,7 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
                            (actualTubeLength);
     fprintf('Error percentage in approximated tube length = %.4f \n',totalTubeLengthError*100);
     
-    % STEP2: Construct the frame
+    % STEP3: Construct the frame
     offsetW = 6;
     offsetH = 6;
     domainW = totalTubeLengthinCells + offsetW;
@@ -153,17 +159,17 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
     % Declare all the cells as air by default
     PV_N(1:frameH, 1:frameW, 4) = cell_air;
         
-    % STEP2: Find the mid point in the frame
+    % STEP4: Find the mid point in the frame
     midY = floor(frameH/2);
     midX = floor(frameW/2);
     
-    % STEP3: Find the glottal end: Starting point of the tube
+    % STEP5: Find the glottal end: Starting point of the tube
     tubeStartX = midX - round(totalTubeLengthinCells/2);
     tubeStartY = midY;
     tubeEndX   = tubeStartX + totalTubeLengthinCells-1;
     tubeEndY   = midY;
     
-    % STEP4: Store the cummulative length of each tube section
+    % STEP6: Store the cummulative length of each tube section
     tubeCummSectionLength = zeros(1, numSections);
     for sectionCount = 1:numSections
         if sectionCount == 1
@@ -173,7 +179,7 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
         end
     end
     
-    % STEP5: Draw the geometrical shape of the tube
+    % STEP7: Draw the geometrical shape of the tube
     % Set a counter to traverse through tubeCummSectionLength
     sectionCounter = 1;
     
@@ -211,7 +217,7 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
             % Find the difference between currTubeLength and tubeCummSectionLength
             diffLength = currTubeLength - tubeCummSectionLength(sectionCounter);
             
-            if diffLength>0.5 && sectionCounter~=numSections
+            if diffLength>cellHalfLen && sectionCounter~=numSections
                 % Increase the section counter
                 sectionCounter = sectionCounter+1;
                 

@@ -12,11 +12,14 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
     % Define units
     meter = 1;
     centimeter = 1e-2*meter;
-    
+    cellHalfLen = ds/2;
+	
     % Vocal tract parameters
 	sectional_length = 0.00445; % in meter
     numSections = 44;
+    diameter_mul = 1;
     
+    %STEP0: Convert the 3D area function vector to 2D
     % Tube section area in cm^2
     tubeSectionArea_incm2_3D = [0.54 0.61 0.66 0.75 ...
                                 1.13 1.99 2.83 2.90 ...
@@ -53,6 +56,8 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
     % numerical generation of vowels.
     
     % Store the value of m in an array - are expansion ratio
+    % The variable 'm' has been named as per the parameters named in the
+    % paper to avoid confusion
     m = ones(1, numSections);
     
     % Loop to define m value
@@ -111,7 +116,9 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
             end
         end   
     end
-       
+    
+    tubeSectionDiameterCells = tubeSectionDiameterCells.*diameter_mul;
+    
     % STEP2: Find the total tube length and calculate the percentage error 
     % in the approximated tube length
 
@@ -125,7 +132,7 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
                            (actualTubeLength);
     fprintf('Error percentage in approximated tube length = %.4f \n',totalTubeLengthError*100);
     
-    % STEP2: Construct the frame
+    % STEP3: Construct the frame
     offsetW = 8;
     offsetH = 6;
     domainW = totalTubeLengthinCells + offsetW;
@@ -152,17 +159,17 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
     % Declare all the cells as air by default
     PV_N(1:frameH, 1:frameW, 4) = cell_air;
         
-    % STEP2: Find the mid point in the frame
+    % STEP4: Find the mid point in the frame
     midY = floor(frameH/2);
     midX = floor(frameW/2);
     
-    % STEP3: Find the glottal end: Starting point of the tube
+    % STEP5: Find the glottal end: Starting point of the tube
     tubeStartX = midX - round(totalTubeLengthinCells/2);
     tubeStartY = midY;
     tubeEndX   = tubeStartX + totalTubeLengthinCells-1;
     tubeEndY   = midY;
     
-    % STEP4: Store the cummulative length of each tube section
+    % STEP6: Store the cummulative length of each tube section
     tubeCummSectionLength = zeros(1, numSections);
     for sectionCount = 1:numSections
         if sectionCount == 1
@@ -172,7 +179,7 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
         end
     end
     
-    % STEP5: Draw the geometrical shape of the tube
+    % STEP7: Draw the geometrical shape of the tube
     % Set a counter to traverse through tubeCummSectionLength
     sectionCounter = 1;
     
@@ -210,7 +217,7 @@ function [listenerX, listenerY, frameH, frameW, PV_N]...
             % Find the difference between currTubeLength and tubeCummSectionLength
             diffLength = currTubeLength - tubeCummSectionLength(sectionCounter);
             
-            if diffLength>0.5 && sectionCounter~=numSections
+            if diffLength>cellHalfLen && sectionCounter~=numSections
                 % Increase the section counter
                 sectionCounter = sectionCounter+1;
                 
