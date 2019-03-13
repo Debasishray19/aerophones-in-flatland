@@ -404,10 +404,7 @@ Pr_next = zeros(frameH-2,frameW-2);
 Vx_next = zeros(frameH-2,frameW-2);
 Vy_next = zeros(frameH-2,frameW-2);
 
-%clims = [-2000 2000];
 figure;
-%hImg = imagesc(PV_Nplus1(:,:,1), clims); %VIC in matlab can remove this
-% title('Simulation');
 
 for T = 1:STEPS
     
