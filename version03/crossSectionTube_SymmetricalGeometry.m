@@ -16,7 +16,8 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
 	
     % Vocal tract parameters
     numSections = 44;
-    diameter_mul = 0.80;
+    diameter_mul = 1;
+    depth_mul = 0.05;
     
     % STEP0: Select the cross-sectional area based on the vowelSound 
     % Selct the cross sectional area based on the vowel sound
@@ -445,6 +446,11 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
         depthP(depthP<minDepth) = minDepth;
         depthX(depthX<minDepth) = minDepth;
         depthY(depthY<minDepth) = minDepth;
+        
+        % sacle all the depth values
+        depthP = depthP*depth_mul;
+        depthX = depthX*depth_mul;
+        depthY = depthY*depth_mul;
     end
            
     % Plot the depth of the tube
