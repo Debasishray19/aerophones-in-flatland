@@ -6,9 +6,7 @@
 ```diff
 - excitationV = srcAmplitude * sin(2*pi*excitationF*dt*(exeT(:)-1));
 ```
-<br>3. To verify the frequency response of audio data inlude the MATLAB file: <i>audioGenfunc.m</i> and run the following code line
+<br>3. To verify the frequency response of audio data inlude the MATLAB file: <i>frequencyPlot.m</i> and run the following code line
 ```diff
-+ audioGenfunc(Pr_Audio, excitationV);
++ frequencyPlot(Pr_Audio, srate);
 ```
-
-
