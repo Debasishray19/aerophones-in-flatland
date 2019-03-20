@@ -1,4 +1,4 @@
-# Aerophones In Flatland - Test Procedure And Test Result
+# Aerophones In Flatland - Running Guide
 
 <b>Running Code:</b>
 <br>1. Main File: aeophonesInFlatLand_v2.m
