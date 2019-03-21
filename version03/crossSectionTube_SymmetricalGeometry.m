@@ -17,7 +17,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
     % Vocal tract parameters
     numSections = 44;
     diameter_mul = 1;
-    depth_mul = 0.05;
+    depth_mul = 1;
     
     % STEP0: Select the cross-sectional area based on the vowelSound 
     % Selct the cross sectional area based on the vowel sound
@@ -405,11 +405,15 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
         % To smooth out, average the current cell depthX value with the right
         % most cell.
         depthX(:, 1:frameW-1) = ( depthX(:, 1:frameW-1)+depthX(:, 2:frameW) )/2;
-        depthX(:, frameW) = ( depthX(:, frameW)+openSpaceDepth )/2;
+        depthX(:, frameW) = ( depthX(:, frameW)+depthX(midY, tubeEndX) )/2;
         
         depthY(1,:) = (depthY(1,:)+ depthY(midY, tubeEndX))/2;
         depthY(2:frameH,:) = (depthY(2:frameH,:)+ depthY(1:frameH-1,:))/2;
         
+        % scale all the depth values
+        % depthP = depthP*depth_mul;
+        depthX = depthX*depth_mul;
+        depthY = depthY*depth_mul;
         
         % Extrapolating depthP from depthX and depthY
         for yCounter = 1:frameH
@@ -446,11 +450,6 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
         depthP(depthP<minDepth) = minDepth;
         depthX(depthX<minDepth) = minDepth;
         depthY(depthY<minDepth) = minDepth;
-        
-        % sacle all the depth values
-        depthP = depthP*depth_mul;
-        depthX = depthX*depth_mul;
-        depthY = depthY*depth_mul;
     end
            
     % Plot the depth of the tube
