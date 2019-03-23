@@ -486,9 +486,9 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
          cell_noPressure;
      
     % Find the distance of the mic position from the noPressure cells
-    % (Inside the tube)   
-    micXposCells = round(micXpos/ds);
+    % (Inside the tube)
     
-    listenerX = tubeEndX-micXposCells;
+    micXposCells = (micXpos/ds);
+    listenerX = tubeEndX;
     listenerY = tubeEndY;   
 end
