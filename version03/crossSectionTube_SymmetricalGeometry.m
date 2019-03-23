@@ -171,7 +171,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
     % in the approximated tube length
 
     % Number of cells for total tube length
-    actualTubeLength = 44*sectional_length;
+    actualTubeLength = numSections*sectional_length;
     totalTubeLengthinCells = round(actualTubeLength/ds);
     approxTubeLength = totalTubeLengthinCells*ds;
     
@@ -472,7 +472,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
     PV_N(excitationYend+1,excitationXstart,4) = cell_wall;
     
     % Set the noPressure cell
-    getRadius = (tubeSectionDiameterCells(44)-1)/2;
+    getRadius = (tubeSectionDiameterCells(numSections)-1)/2;
     
     noPressureXstart  = tubeEndX+1;
     noPressureXend    = noPressureXstart;
