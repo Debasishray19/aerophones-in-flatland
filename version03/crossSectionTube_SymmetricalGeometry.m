@@ -18,7 +18,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, PV_N]...
 	
     % Vocal tract parameters
     numSections = 44;
-    diameter_mul = 1;
+    diameter_mul = 0.85;
     depth_mul = 1;
     micXpos = 3*milimeter;
     

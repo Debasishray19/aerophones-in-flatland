@@ -35,10 +35,13 @@ kilogram  = 1e3*gram;
 % if set2D=1, then the 2D simulator will run otherwise 2.5D
 simulation2D = input('Enter 1 for 2D simulation or 0 for 2.5D simulation: ');
 rho = 1.140*kilogram/(meter^3);   % Air density  [kg/m^3]
-srate_mul = input('Enter the sample rate multiplier: ');                     % srate multiplier
+srate_mul = input('Enter the sample rate multiplier: ');    % srate multiplier
+mu_3D = 0.005;                     % Boundary admittance in 3D tube
+mu_2D = mu_3D*2*(0.5*pi/1.84);     % Boundary admittance in 2D tube
 c   = 350*meter/second;            % Sound speed in air [m/s]
 maxSigmadt = 0.5;                  % Attenuation coefficient at the PML layer
-alpha = 0.008;                     % Reflection coefficient
+% alpha = 0.008;                     % Reflection coefficient
+alpha = 1/(0.5+0.25*(mu_2D +(1/mu_2D)));
 srate = 44100*srate_mul;           % Sample frequency
 z_inv = 1 / (rho*c*( (1+sqrt(1-alpha))/(1-sqrt(1-alpha)) ));
 pmlLayer = 6; % Number of PML layers
@@ -513,7 +516,7 @@ for T = 1:STEPS
     audio_Vis(PV_Nplus1(:,:,4)==cell_wall) = vis_Boundary; % To visualize the obstacle
     
     % STEP10: Plot wave simulation
-    if ~mod(T,1)
+    if ~mod(T,1000)
         imagesc(audio_Vis,[-1000 4000]);  colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
