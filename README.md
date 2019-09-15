@@ -1,4 +1,6 @@
 # Aerophones In Flatland
+<br><b>About:</b>
+<br>The objective of this project is to build a new vocal tract model which could be as precise as 3D models in terms of formants position and also computationally lightweight. This might help in designing real-time or quasi real-time articulatory speech synthesis. Therefore, we are proposing a new vocal tract model (2.5D FDTD) which has been proven to be precise when compared with a realistic regular 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract model [2]. We are using finite difference time domain technique to design the acoustic wave solver.
 
 <br><b>References: </b>
 <br>[1] <a href ="https://dl.acm.org/citation.cfm?id=2767001">"Aerophones in flatland: Interactive Wave Simulation Of Wind Instruments"</a>  by Andrew Allen, Nikunj Raghuvansi. 
@@ -11,5 +13,10 @@
 <br><b>YouTube Link: </b>
 <br>[1] <a href = "https://www.youtube.com/watch?v=0wqWfBbIQtg">Arophones In Flatland: SIGGRAPH 2015 Talk</a>
 
+<br><b>Publication:</b>
+<br>Following is the research paper that comes out of this project. If you would like to use the code for your research, please put a reference to this paper:
+<br>[1] <a href="https://www.isca-speech.org/archive/Interspeech_2019/pdfs/1764.pdf">An Extended Two-Dimensional Vocal Tract Model for Fast Acoustic Simulation of Single-Axis Symmetric Three-Dimensional Tubes</a> DR Mohapatra, Victor Zappt, Sidney Fels, INTERSPEECH 2019, Graz, Austria
+
+
 <br><b>[Note]:</b>
-<br> Please use the following code <u>aerophonesInFlatlandv2.m</u> in version2 folder for simulation. To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.om
+<br> Please use the following code <u>aerophonesInFlatlandv2.m</u> in version3 folder for simulation. To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.com
