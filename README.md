@@ -14,7 +14,7 @@
 <br>[1] <a href = "https://www.youtube.com/watch?v=0wqWfBbIQtg">Arophones In Flatland: SIGGRAPH 2015 Talk</a>
 
 <br><b>Publication:</b>
-<br>Following is the research paper that comes out of this project. If you would like to use the code for your research, please put a reference to this paper:
+<br>Following is the research paper that comes out of this project. If you would like to use the code for your research, please consider citing this paper:
 <br>[1] <a href="https://www.isca-speech.org/archive/Interspeech_2019/pdfs/1764.pdf">"An Extended Two-Dimensional Vocal Tract Model for Fast Acoustic Simulation of Single-Axis Symmetric Three-Dimensional Tubes"</a> by DR Mohapatra, Victor Zappt, Sidney Fels, INTERSPEECH 2019, Graz, Austria
 
 
