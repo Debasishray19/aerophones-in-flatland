@@ -1,9 +1,10 @@
 # The Vocaltube: An Articulatory Speech Synthesis
 <br><b>About:</b>
-<br>The objective of this project is to build a new vocal tract model which could be as precise as 3D models in terms of formants position and also computationally lightweight. This might help in designing real-time or quasi real-time articulatory speech synthesis. Therefore, we are proposing a new vocal tract model (2.5D FDTD) which has been proven to be precise when compared with a realistic regular 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract model [2]. We are using finite difference time domain technique to design the acoustic wave solver.
+<br>The objective of this project is to build a new vocal tract model which could be as precise as 3D models in terms of formants position and also computationally lightweight. This might help in designing real-time or quasi real-time articulatory speech synthesis. Therefore, we are proposing a new vocal tract model (2.5D FDTD) which has been proven to be precise when compared with a realistic regular 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract model [2]. We are using finite difference time domain technique to design the acoustic wave solver. The below images show the geometrical modeling of cross-sectional areas for vowel sound /u/ and it's acoustic simulation.
 
-<img src="img/vowel_domain_plus_pml.JPG">
-                       
+<img src="img/vowel_domain_plus_pml.JPG" width="625">
+<img src="img/simulation_vowel_u.JPG" width="625">
+
 <br><b>References: </b>
 <br>[1] <a href ="https://dl.acm.org/citation.cfm?id=2767001">"Aerophones in flatland: Interactive Wave Simulation Of Wind Instruments"</a>  by Andrew Allen, Nikunj Raghuvansi. 
 <br>[2] <a href = "https://asa.scitation.org/doi/abs/10.1121/2.0000395">"Towards real-time two-dimensional wave propagation for articulatory speech synthesis"</a> by Victor Zappi, Arvind Vasuvedan, Andrew Allen, Nikunj Raghuvansi and Sidney Fels.
