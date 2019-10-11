@@ -18,8 +18,12 @@ function computeImpedance(pressure, velocity)
     figure;
     plot(real(zImpedance));
     xlim([0 10000]);
+    xlabel('Frequency in Hz');
+    ylabel('Resistance');
     
     figure;
     plot(imag(zImpedance));
     xlim([0 10000]);
+    xlabel('Frequency in Hz');
+    ylabel('Reactance');
 end
