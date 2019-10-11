@@ -1,4 +1,4 @@
-function computrImpedance(pressure, velocity)
+function computeImpedance(pressure, velocity)
 
     signalLen = length(pressure);   % Compute signal length
     nfft2 = 2^nextpow2(signalLen);  % Find the next number of signalLen which is power of 2
