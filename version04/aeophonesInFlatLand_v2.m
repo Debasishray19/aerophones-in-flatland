@@ -40,7 +40,7 @@ mu_3D = 0.005;                     % Boundary admittance in 3D tube
 mu_2D = mu_3D*2*(0.5*pi/1.84);     % Boundary admittance in 2D tube
 c   = 350*meter/second;            % Sound speed in air [m/s]
 maxSigmadt = 0.5;                  % Attenuation coefficient at the PML layer
-alpha = 0;                         % Sound absorption coefficient = 0.008 (prev)
+alpha = 0.008;                     % Sound absorption coefficient = 0.008 (prev)
 % alpha = 1/(0.5+0.25*(mu_2D +(1/mu_2D)));
 srate = 44100*srate_mul;           % Sample frequency
 z_inv = 1 / (rho*c*( (1+sqrt(1-alpha))/(1-sqrt(1-alpha)) ));
@@ -536,7 +536,7 @@ for T = 1:STEPS
     audio_Vis(PV_Nplus1(:,:,4)==cell_head) = vis_Boundary;
     
     % STEP10: Plot wave simulation
-    if ~mod(T,1000)
+    if ~mod(T,1)
         imagesc(audio_Vis,[-1000 4000]);  colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');
@@ -551,9 +551,21 @@ for T = 1:STEPS
     Pr_Audio(T) = PV_Nplus1(listenerY, listenerX,1);
     Vx_Vel(T)   = PV_Nplus1(listenerY, listenerX,2);
     Vy_Vel(T)   = PV_Nplus1(listenerY, listenerX,3);
-    
+  
     % Store data from the second mic position
     Pr_Audio2(T) = PV_Nplus1(listenerY, listenerX+5,1);
     Vx_Vel2(T)   = PV_Nplus1(listenerY, listenerX+5,2);
     Vy_Vel2(T)   = PV_Nplus1(listenerY, listenerX+5,3);
+    
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SAVE DATA
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Calculate the velocity magnitude
+vRes = sqrt(Vx_Vel.^2 + Vy_Vel.^2);
+vRes2 = sqrt(Vx_Vel2.^2 + Vy_Vel2.^2);
+
+% Save the data
+save('impedanceData.mat','Pr_Audio','Vx_Vel','Vy_Vel',...
+      'Pr_Audio2','Vx_Vel2','Vy_Vel2', 'vRes', 'vRes2');
