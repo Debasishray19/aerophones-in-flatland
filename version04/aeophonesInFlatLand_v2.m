@@ -40,11 +40,12 @@ mu_3D = 0.005;                     % Boundary admittance in 3D tube
 mu_2D = mu_3D*2*(0.5*pi/1.84);     % Boundary admittance in 2D tube
 c   = 350*meter/second;            % Sound speed in air [m/s]
 maxSigmadt = 0.5;                  % Attenuation coefficient at the PML layer
-alpha = 0.008;                     % Sound absorption coefficient = 0.008 (prev)
-% alpha = 1/(0.5+0.25*(mu_2D +(1/mu_2D)));
+% alpha = 0.008;                     % Sound absorption coefficient = 0.008 (prev)
+alpha = 1/(0.5+0.25*(mu_2D +(1/mu_2D)));
 srate = 44100*srate_mul;           % Sample frequency
 z_inv = 1 / (rho*c*( (1+sqrt(1-alpha))/(1-sqrt(1-alpha)) ));
 pmlLayer = 6;                      % Number of PML layers
+baffleSwitch = 0;                  % By default model should not have head/circular baffle
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DASHBOARD
@@ -142,33 +143,16 @@ pmlSwitch = input('Swicth ON PML Layers. Press 1:ON 0:OFF = ');
 
 switch simulationType
     case 0 % For open air space simulation
-        % domainW an domainH signifies the size of problem space
-        domainW = input('Enter domain width: ');
-        domainH = input('Enter domain height: ');
+        % Fix vowelSound to zero for open air-space simulation
+        vowelSound = 0;
         
         % Create the frame
-        [PV_N, frameH, frameW, depthX, depthY, depthP] = ...
-         frameConstruction(domainH, domainW, pmlSwitch, pmlLayer, simulation2D);
+        [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSwitch, PV_N]= ...
+             crossSectionTube_SymmetricalGeometry(pmlSwitch, ds, pmlLayer, ...
+             vowelSound, simulation2D, cell_wall, cell_air, cell_excitation, cell_noPressure, cell_head); 
         
-        % Define cell type and store it in PV_N(,,4)
-        % Declare all the cells as air by default
-        PV_N(1:frameH, 1:frameW, 4) = cell_air;
-        
-        % Define source position
-        excitationX = floor(frameW/2);  
-        excitationY = floor(frameH/2);
-        
-        % Define source size
-        excitationH = 1;
-        excitationW = 1;
-        
-        % Define Listener postion
-        listenerX = excitationX;
-        listenerY = excitationY;
-
-        % Defining source cell type
-        cellType = cell_excitation;
-        PV_N(excitationY+(0:excitationH-1), excitationX+(0:excitationW-1), 4) = cellType;
+        % Reset source signal direction along all the 4 direction
+        srcDirection = [-1 -1 1 1];
     
     case 1 % For fixed size tube-wall simulation
         
@@ -407,11 +391,6 @@ betaVySqr = minVyBeta.*minVyBeta;
 betaVySqr_dt_invRho = (betaVySqr.*dt)/rho;
 
 rho_sqrC_dt_invds = (kappa*dt)/dx;
-% To calculate pressure we do not need to change the sigmaPrimedt
-% So for each cell get the cell index and then calculate the corresponding 
-% typeIndex (2,:) by adding 1
-
-% PressureSigmaPrimedt = typeValues(2,PV_N(2:frameH-1, 2:frameW-1, 4)+1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FDTD PARAMETERS - PART II (INITIALISING FIELD)
@@ -427,10 +406,8 @@ Pr_next = zeros(frameH-2,frameW-2);
 Vx_next = zeros(frameH-2,frameW-2);
 Vy_next = zeros(frameH-2,frameW-2);
 
-%clims = [-2000 2000];
+% Open a new figure window to visualize the simulation
 figure;
-%hImg = imagesc(PV_Nplus1(:,:,1), clims); %VIC in matlab can remove this
-% title('Simulation');
 
 for T = 1:STEPS
     
@@ -536,7 +513,7 @@ for T = 1:STEPS
     audio_Vis(PV_Nplus1(:,:,4)==cell_head) = vis_Boundary;
     
     % STEP10: Plot wave simulation
-    if ~mod(T,1)
+    if ~mod(T,1000)
         imagesc(audio_Vis,[-1000 4000]);  colorbar; % Multiplied with twenty to change the color code
         xlabel('Spatial Resolution along X');
         ylabel('Spatial Resolution along Y');

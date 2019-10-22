@@ -13,7 +13,6 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     meter = 1;
     centimeter = 1e-2*meter;
     milimeter = 1e-3*meter;
-    
     cellHalfLen = ds/2;
 	
     % Vocal tract parameters
@@ -21,13 +20,41 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     diameter_mul = 0.85;
     depth_mul = 1;
     micXpos = 3*milimeter;
-    minDepth  = 0.01; % Define a minDepth
+    minDepth  = 0.001; % Define a minDepth
     
-    % STEP0: Select the cross-sectional area based on the vowelSound 
+    % STEP0: Swich ON/OFF the circular baffle walls around the vocal tract 
+    % based on the vowelSound. Or consider user input for the circular baffle
+    % only in the case of vowelSound /a/, /i/ and /u/.
+    if vowelSound ~=0
+        baffleSwitch = input('Swicth ON the circular baffle. Press 1:ON 0:OFF = ');
+    else
+        % Define cell_wall as cell_air if it's an open space simulation [No vowel sound]
+        cell_wall = cell_air;
+        cell_noPressure = cell_air;
+        baffleSwitch=0;
+    end
+    
+    % STEP1: Select the cross-sectional area based on the vowelSound 
     % Selct the cross sectional area based on the vowel sound
     % Tube section area in cm^2 in 3D
     switch vowelSound
-        case 1
+        case 0 % For open air-space
+            % [Note]: For open air-space, we will create the tube structure
+            % first. Then we will switch the cell_wall to cell_air.
+            sectional_length = 0.00388; % in meter
+            tubeSectionArea_incm2_3D = [0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0 ...
+                                        0 0 0 0];
+                                    
+        case 1 % For vowel /a/
             sectional_length = 0.00388; % in meter
             tubeSectionArea_incm2_3D = [0.56 0.62 0.66 0.78 ...
                                         0.97 1.16 1.12 0.82 ...
@@ -40,7 +67,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
                                         9.29 9.26 9.06 8.64 ...
                                         7.91 6.98 6.02 5.13 ...
                                         4.55 4.52 4.71 4.72];
-        case 2
+        case 2 % For vowel /u/
             sectional_length = 0.00445; % in meter
             tubeSectionArea_incm2_3D = [0.54 0.61 0.66 0.75 ...
                                         1.13 1.99 2.83 2.90 ...
@@ -54,7 +81,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
                                         5.74 5.41 3.82 2.34 ...
                                         1.35 0.65 0.29 0.16];
             
-        case 3
+        case 3 % For vowel /i/
             sectional_length = 0.00384; % in meter
             tubeSectionArea_incm2_3D = [0.51 0.59 0.62 0.72 ...
                                         1.24 2.30 3.30 3.59 ...
@@ -76,16 +103,16 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     % Tube section area in m^2
     tubeSectionArea_inm2_3D = tubeSectionArea_incm2_3D.*(centimeter*centimeter);    
     
-    % STEP1: Calculate the tube section diameter with diameter multiplier
+    % STEP2: Calculate the tube section diameter with diameter multiplier
     tubeSectionDiameter_3D = 2*sqrt(tubeSectionArea_inm2_3D./pi).*diameter_mul;
     
-    % STEP2: Convert the 3D cross sectional area into 2D using expansion
+    % STEP3: Convert the 3D cross sectional area into 2D using expansion
     % ratio. But we do not need this for 2.5D. Use a variable to switch
     % between 2.5D and 2D.
     
     % If simulation2D is 1 then we will be running 2D simulator otherwise 2.5D
     % will be running 
-    if simulation2D==1 % Fpr 2D simulation
+    if simulation2D==1 % For 2D simulation
         % Tube section diameter in cm^2 in 2D
         % Create the array 
         tubeSectionDiameter_2D = zeros(1, numSections);
@@ -152,7 +179,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     % Change the tube diameter to 1 if it contains 0
     tubeSectionDiameterCells(tubeSectionDiameterCells==0)=1;
     
-    %STEP3: Choose the best possible odd number from the Diameter array
+    %STEP4: Choose the best possible odd number from the Diameter array
     for diameterCounter = 1:numSections       
         % Verify if the cellsPerDiameter is odd or not
         if mod(tubeSectionDiameterCells(diameterCounter), 2) == 0
@@ -171,7 +198,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
         end   
     end
   
-    % STEP4: Find the total tube length and calculate the percentage error 
+    % STEP5: Find the total tube length and calculate the percentage error 
     % in the approximated tube length
 
     % Number of cells for total tube length
@@ -184,7 +211,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
                            (actualTubeLength);
     fprintf('Error percentage in approximated tube length = %.4f \n',totalTubeLengthError*100);
     
-    % STEP5: Determine circular baffle radius 
+    % STEP6: Determine circular baffle radius 
     diameterBaffleVar = 0.004; % User Input to change the baffle diameter
     baffleDiameter = approxTubeLength + diameterBaffleVar;
     
@@ -204,11 +231,17 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     baffleBase = sqrt(baffleRadius^2 - baffleHeight^2);
     baseNumCells = round(baffleBase/ds);
     
-    % STEP6: Construct the frame and PV_N array
+    % STEP7: Construct the domain, frame and PV_N array
     offsetW = 10;
     offsetH = 10;
-    domainW = 2*baseNumCells + offsetW;
-    domainH = 2*baseNumCells + offsetH;
+    
+    if baffleSwitch == 1
+        domainW = 2*baseNumCells + offsetW;
+        domainH = 2*baseNumCells + offsetH;
+    else
+        domainW = totalTubeLengthinCells + offsetW;
+        domainH = max(tubeSectionDiameterCells) + offsetH;
+    end
     
     % Build frame [Frame = Domain Size + PML Layers]
     if pmlSwitch == 1
@@ -231,7 +264,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     % Declare all the cells as air by default
     PV_N(1:frameH, 1:frameW, 4) = cell_air;
     
-    % STEP7: Define the depth matrix to store the tube height along z-axis
+    % STEP8: Define the depth matrix to store the tube height along z-axis
     if simulation2D == 1
         openSpaceDepth = 1;
     else
@@ -241,8 +274,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     depthP    = ones(frameH, frameW)*openSpaceDepth*meter;
     depthX    = ones(frameH, frameW)*openSpaceDepth*meter;
     depthY    = ones(frameH, frameW)*openSpaceDepth*meter;
-    
-    
+       
     % Array to store the tube upper and lower wall positions
     % This array will help us to major the depth/height across the tube
     % Need to calculate depth/height for each cell in a column
@@ -250,19 +282,17 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     % ROW1=Upper Wall Idx, ROW2=Lower Wall Idx, ROW3=Radius
     cellDepthProp = zeros(2, totalTubeLengthinCells);
     
-    % STEP8: Find the mid point in the frame
+    % STEP9: Find the mid point in the frame
     midY = floor(frameH/2);
     midX = floor(frameW/2);
     
-    % STEP9: Find the glottal end: Starting point of the tube
+    % STEP10: Find the glottal end: Starting point of the tube
     tubeStartX = midX - round(totalTubeLengthinCells/2);
     tubeStartY = midY;
     tubeEndX   = tubeStartX + totalTubeLengthinCells-1;
     tubeEndY   = midY;
-    
-    % STEP10: Set the circular baffle walls around the vocal tract
-    baffleSwitch = input('Swicth ON the circular baffle. Press 1:ON 0:OFF = ');
-    
+        
+    % STEP11: Set the circular baffle walls aound the vocal tract
     if baffleSwitch==1
         baffleCentreY = midY;
         baffleCentreX = tubeEndX-baseNumCells;
@@ -330,13 +360,13 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
         PV_N(bufferStartPositions(1):bufferStartPositions(2), bufferStartX, 4) = cell_head;
     end
     
-    % STEP11: Store the cummulative length of each tube section
+    % STEP12: Store the cummulative length of each tube section
     tubeCummSectionLength = zeros(1, numSections);
     for sectionCount = 1:numSections
         tubeCummSectionLength(sectionCount) = sectional_length*sectionCount;
     end
     
-    % STEP12: Draw the geometrical shape of the tube
+    % STEP13: Draw the geometrical shape of the tube
     % Set a counter to traverse through tubeCummSectionLength
     sectionCounter = 1;
     
@@ -420,11 +450,11 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
         prevLowerX = lowerX;
     end % End of For loop
     
-    % STEP13: Set the depthX, depthY and depthP if simulation2D~=1. 
+    % STEP14: Set the depthX, depthY and depthP if simulation2D~=1. 
     % For 2D simulation we do not need depth parameter.
     % Calculate depth/height of the tube along z-axis for depthX and depthY
     % For the boundary set the radius as zero
-    if simulation2D~=1
+    if simulation2D~=1 && vowelSound ~=0
         for tubeCellLengthCounter = 1:totalTubeLengthinCells
         
             % S1: Find the lowerY and upperY
