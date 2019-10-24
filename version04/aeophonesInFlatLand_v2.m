@@ -544,5 +544,5 @@ vRes = sqrt(Vx_Vel.^2 + Vy_Vel.^2);
 vRes2 = sqrt(Vx_Vel2.^2 + Vy_Vel2.^2);
 
 % Save the data
-save('impedanceData.mat','Pr_Audio','Vx_Vel','Vy_Vel',...
+save('impedanceData.mat','excitationV','Pr_Audio','Vx_Vel','Vy_Vel',...
       'Pr_Audio2','Vx_Vel2','Vy_Vel2', 'vRes', 'vRes2');
