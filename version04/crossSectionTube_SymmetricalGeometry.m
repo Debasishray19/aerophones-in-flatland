@@ -30,7 +30,6 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     else
         % Define cell_wall as cell_air if it's an open space simulation [No vowel sound]
         cell_wall = cell_air;
-        cell_noPressure = cell_air;
         baffleSwitch=0;
     end
     
@@ -240,7 +239,11 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
         domainH = 2*baseNumCells + offsetH;
     else
         domainW = totalTubeLengthinCells + offsetW;
-        domainH = max(tubeSectionDiameterCells) + offsetH;
+        if vowelSound == 0 % For vowelSound=0, set increase the domain height
+            domainH = max(tubeSectionDiameterCells) + offsetH+50;
+        else
+            domainH = max(tubeSectionDiameterCells) + offsetH;
+        end
     end
     
     % Build frame [Frame = Domain Size + PML Layers]
@@ -609,7 +612,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     
     % Define the grid column at the tube end as cell_noPressure to
     % implement Dirchilet Boundary Condition
-    if baffleSwitch ~= 1
+    if baffleSwitch ~= 1 && vowelSound~=0
         PV_N(noPressureYstart:noPressureYend, noPressureXstart:noPressureXend,4) = ...
                 cell_noPressure;
     end

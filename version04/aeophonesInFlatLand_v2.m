@@ -53,7 +53,7 @@ baffleSwitch = 0;                  % By default model should not have head/circu
 dt = 1/srate;                      % Temporal resolution/ sample time period
 dx = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
 dy = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
-AudioTime = 50*milisecond;         % Total audio signal time
+AudioTime = 1200*milisecond;       % Total audio signal time
 kappa = rho*c*c;                   % Bulk modulus
 ds = dx;                           % Spatial resolution(ds) = dx = dy
 
@@ -133,7 +133,6 @@ for pmlCounter = 0:pmlLayer-1
     typeValues(:, cell_pml0+1+pmlCounter) = [1, sigmadt(pmlCounter+1)];
 end
 typeValues(:, cell_dead+1)    =  [0, 1000000];  % dead cell
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SIMULATION TYPES
@@ -296,7 +295,7 @@ end
 %% Define PML Layer Cells and Dead Cells
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Then modify as per the requirement
-% Define cell_dead
+% Define cell_dead to the outer most layer
 PV_N(1:frameH,1,4) = cell_dead;
 PV_N(1:frameH,frameW,4) = cell_dead;
 PV_N(1,1:frameW,4) = cell_dead;
@@ -465,8 +464,14 @@ for T = 1:STEPS
             excitation_weight = [is_excitation(1) is_excitation(1)].*srcDirection(3:4) + [is_excitation(2) is_excitation(3)].*srcDirection(1:2);
 
             % Inject the source to the Vx_next and Vy_next = excitationV(T)
-            PV_Nplus1(row_idx, col_idx, 2) = PV_Nplus1(row_idx, col_idx, 2) + excitationV(T)*excitation_weight(1)*maxVxSigmaPrimedt(row_idx-1, col_idx-1);
-            PV_Nplus1(row_idx, col_idx, 3) = PV_Nplus1(row_idx, col_idx, 3) + excitationV(T)*excitation_weight(2)*maxVySigmaPrimedt(row_idx-1, col_idx-1);
+            % Verify if the number of time steps (T) is exceeding the
+            % excitation signal boundary. This condition need to be checked
+            % when you are simulating for more number of iterations compare
+            % to the excitation signal length.
+            if T <= length(excitationV)
+                PV_Nplus1(row_idx, col_idx, 2) = PV_Nplus1(row_idx, col_idx, 2) + excitationV(T)*excitation_weight(1)*maxVxSigmaPrimedt(row_idx-1, col_idx-1);
+                PV_Nplus1(row_idx, col_idx, 3) = PV_Nplus1(row_idx, col_idx, 3) + excitationV(T)*excitation_weight(2)*maxVySigmaPrimedt(row_idx-1, col_idx-1);
+            end
             
             % STEP7: Add absorbing boundary condition
             is_normal_dir = [beta(2) ~= cell_air, beta(3) ~= cell_air, beta(3) == cell_air, beta(2) == cell_air];
