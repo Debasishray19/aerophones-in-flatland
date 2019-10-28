@@ -624,8 +624,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
     % Define the place of Listener
     % We can position our mic based upon the experiment thet we are running
     
-    switch baffleSwitch
-       
+    switch baffleSwitch       
         case 0 % Exp1: Simmulationg without a circular baffle             
             listenerX = tubeEndX-micXposCells;
             listenerY = tubeEndY;

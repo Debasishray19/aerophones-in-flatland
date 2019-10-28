@@ -40,7 +40,7 @@ mu_3D = 0.005;                     % Boundary admittance in 3D tube
 mu_2D = mu_3D*2*(0.5*pi/1.84);     % Boundary admittance in 2D tube
 c   = 350*meter/second;            % Sound speed in air [m/s]
 maxSigmadt = 0.5;                  % Attenuation coefficient at the PML layer
-% alpha = 0.008;                     % Sound absorption coefficient = 0.008 (prev)
+% alpha = 0.008;                   % Sound absorption coefficient = 0.008 (prev)
 alpha = 1/(0.5+0.25*(mu_2D +(1/mu_2D)));
 srate = 44100*srate_mul;           % Sample frequency
 z_inv = 1 / (rho*c*( (1+sqrt(1-alpha))/(1-sqrt(1-alpha)) ));
@@ -53,7 +53,7 @@ baffleSwitch = 0;                  % By default model should not have head/circu
 dt = 1/srate;                      % Temporal resolution/ sample time period
 dx = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
 dy = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
-AudioTime = 1200*milisecond;       % Total audio signal time
+AudioTime = 50*milisecond;       % Total audio signal time
 kappa = rho*c*c;                   % Bulk modulus
 ds = dx;                           % Spatial resolution(ds) = dx = dy
 
@@ -62,14 +62,26 @@ ds = dx;                           % Spatial resolution(ds) = dx = dy
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 t = 0:dt:AudioTime-dt;            % time steps
 STEPS = length(t);                % Total time steps
+
+% To store the data from first mic position [Near to tube end]
 Pr_Audio = zeros(1, STEPS);
 Vx_Vel = zeros(1, STEPS);
 Vy_Vel = zeros(1, STEPS);
 
-% To store the data from the second mic
+% To store the data from the second mic [Near to excitation cell]
+Pr_Audio1 = zeros(1, STEPS);
+Vx_Vel1 = zeros(1, STEPS);
+Vy_Vel1 = zeros(1, STEPS);
+
+% To store the data from the third mic [In between excitation and listener cell]
 Pr_Audio2 = zeros(1, STEPS);
 Vx_Vel2 = zeros(1, STEPS);
 Vy_Vel2 = zeros(1, STEPS);
+
+% To store the data from the fourth mic [At the excitation cell]
+Pr_Audio3 = zeros(1, STEPS);
+Vx_Vel3 = zeros(1, STEPS);
+Vy_Vel3 = zeros(1, STEPS);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SOURCE PARAMETERS
@@ -83,8 +95,8 @@ excitationV = impulseResponse(srate, 10000, 2, 22000);
 % Define source propagation direction
 % srcDirection index mean: 1 = Left  = -1
 %                          2 = Down  = -1
-%                          3 = Right = 1
-%                          4 = Up    = 1
+%                          3 = Right =  1
+%                          4 = Up    =  1
 
 srcDirection = [0 0 1 0]; % For all the direction
 
@@ -152,6 +164,9 @@ switch simulationType
         
         % Reset source signal direction along all the 4 direction
         srcDirection = [-1 -1 1 1];
+        
+        % Retrieve excitationV position
+        [exeY, exeX] = find(PV_N(:,:,4)==cell_excitation);
     
     case 1 % For fixed size tube-wall simulation
         
@@ -534,10 +549,20 @@ for T = 1:STEPS
     Vx_Vel(T)   = PV_Nplus1(listenerY, listenerX,2);
     Vy_Vel(T)   = PV_Nplus1(listenerY, listenerX,3);
   
-    % Store data from the second mic position
-    Pr_Audio2(T) = PV_Nplus1(listenerY, listenerX+5,1);
-    Vx_Vel2(T)   = PV_Nplus1(listenerY, listenerX+5,2);
-    Vy_Vel2(T)   = PV_Nplus1(listenerY, listenerX+5,3);
+    % Case1: Store data from the second mic position [Near to excitation cell]
+    Pr_Audio1(T) = PV_Nplus1(listenerY, exeX+3,1);
+    Vx_Vel1(T)   = PV_Nplus1(listenerY, exeX+3,2);
+    Vy_Vel1(T)   = PV_Nplus1(listenerY, exeX+3,3);
+    
+    % Case2: Store data from the third mic position [Mid position of source and mic]
+    Pr_Audio2(T) = PV_Nplus1(listenerY, exeX+round((listenerX-exeX)/2),1);
+    Vx_Vel2(T)   = PV_Nplus1(listenerY, exeX+round((listenerX-exeX)/2),2);
+    Vy_Vel2(T)   = PV_Nplus1(listenerY, exeX+round((listenerX-exeX)/2),3);
+    
+    % Case3: Store data from the fourth mic position [At the excitation cell]
+    Pr_Audio3(T) = PV_Nplus1(listenerY, exeX,1);
+    Vx_Vel3(T)   = PV_Nplus1(listenerY, exeX,2);
+    Vy_Vel3(T)   = PV_Nplus1(listenerY, exeX,3);
     
 end
 
@@ -546,8 +571,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Calculate the velocity magnitude
 vRes = sqrt(Vx_Vel.^2 + Vy_Vel.^2);
+vRes1 = sqrt(Vx_Vel1.^2 + Vy_Vel1.^2);
 vRes2 = sqrt(Vx_Vel2.^2 + Vy_Vel2.^2);
+vRes3 = sqrt(Vx_Vel3.^2 + Vy_Vel3.^2);
 
 % Save the data
 save('impedanceData.mat','excitationV','Pr_Audio','Vx_Vel','Vy_Vel',...
-      'Pr_Audio2','Vx_Vel2','Vy_Vel2', 'vRes', 'vRes2');
+      'Pr_Audio1','Vx_Vel1','Vy_Vel1','Pr_Audio2','Vx_Vel2','Vy_Vel2',...
+      'Pr_Audio3','Vx_Vel3','Vy_Vel3','vRes', 'vRes1','vRes2', 'vRes3');
+      
