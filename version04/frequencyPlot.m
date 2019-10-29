@@ -15,5 +15,5 @@ function frequencyPlot(audioSignal, srate)
     ylabel('Magnitude [dB]');
     axis 'auto y'
     yLim = ylim();
-    axis([2 22050 yLim(1) yLim(2)])
+    axis([2 23050 yLim(1) yLim(2)])
 end
