@@ -18,7 +18,7 @@
 
 <br><b>Publication:</b>
 <br>Following is the research paper that comes out of this project. If you would like to use the code for your research, please consider citing this paper:
-<br>[1] <a href="https://www.isca-speech.org/archive/Interspeech_2019/abstracts/1764.html">"An Extended Two-Dimensional Vocal Tract Model for Fast Acoustic Simulation of Single-Axis Symmetric Three-Dimensional Tubes"</a> by DR Mohapatra, Victor Zappt, Sidney Fels, INTERSPEECH 2019, Graz, Austria
+<br>[1] <a href="https://www.isca-speech.org/archive/Interspeech_2019/abstracts/1764.html">"An Extended Two-Dimensional Vocal Tract Model for Fast Acoustic Simulation of Single-Axis Symmetric Three-Dimensional Tubes"</a> by DR Mohapatra, Victor Zappt, Sidney Fels, INTERSPEECH 2019, Graz, Austria. [[Code]](https://github.com/Debasishray19/vocaltube-speech-synthesis/tree/master/version03) [[Talk Slide]](https://github.com/Debasishray19/vocaltube-speech-synthesis/blob/master/Interspeech2019%20Presentation/Interspeech%202019%20Presentation.pptx)
 
 
 <br><b>[Note]:</b>
