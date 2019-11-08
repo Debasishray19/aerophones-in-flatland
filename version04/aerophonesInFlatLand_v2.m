@@ -53,7 +53,7 @@ baffleSwitch = 0;                  % By default model should not have head/circu
 dt = 1/srate;                      % Temporal resolution/ sample time period
 dx = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
 dy = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
-AudioTime = 50*milisecond;       % Total audio signal time
+AudioTime = 1200*milisecond;       % Total audio signal time
 kappa = rho*c*c;                   % Bulk modulus
 ds = dx;                           % Spatial resolution(ds) = dx = dy
 
@@ -63,25 +63,30 @@ ds = dx;                           % Spatial resolution(ds) = dx = dy
 t = 0:dt:AudioTime-dt;            % time steps
 STEPS = length(t);                % Total time steps
 
-% To store the data from first mic position [Near to tube end]
+% Case 0: To store the data from first mic position [Near to tube end]
 Pr_Audio = zeros(1, STEPS);
 Vx_Vel = zeros(1, STEPS);
 Vy_Vel = zeros(1, STEPS);
 
-% To store the data from the second mic [Near to excitation cell]
+% Case 1: To store the data from second mic position [Near to PML Layer]
 Pr_Audio1 = zeros(1, STEPS);
 Vx_Vel1 = zeros(1, STEPS);
 Vy_Vel1 = zeros(1, STEPS);
 
-% To store the data from the third mic [In between excitation and listener cell]
+% case 2: To store the data from the second mic [Near to excitation]
 Pr_Audio2 = zeros(1, STEPS);
 Vx_Vel2 = zeros(1, STEPS);
 Vy_Vel2 = zeros(1, STEPS);
 
-% To store the data from the fourth mic [At the excitation cell]
+% Case 3: To store the data from the third mic [In between excitation and listener]
 Pr_Audio3 = zeros(1, STEPS);
 Vx_Vel3 = zeros(1, STEPS);
 Vy_Vel3 = zeros(1, STEPS);
+
+% Case 4: To store the data from the fourth mic [At the excitation]
+Pr_Audio4 = zeros(1, STEPS);
+Vx_Vel4 = zeros(1, STEPS);
+Vy_Vel4 = zeros(1, STEPS);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SOURCE PARAMETERS
@@ -302,7 +307,10 @@ switch simulationType
         % Generate the Tube Shape
         [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSwitch, PV_N]= ...
              crossSectionTube_SymmetricalGeometry(pmlSwitch, ds, pmlLayer, ...
-             vowelSound, simulation2D, cell_wall, cell_air, cell_excitation, cell_noPressure, cell_head);     
+             vowelSound, simulation2D, cell_wall, cell_air, cell_excitation, cell_noPressure, cell_head);   
+         
+        % Retrieve excitationV position
+        [exeY, exeX] = find(PV_N(:,:,4)==cell_excitation);
     otherwise
 end
 
@@ -544,25 +552,30 @@ for T = 1:STEPS
     % STEP11: Copy PV_Nplus1 to PV_N for the next time step
     PV_N = PV_Nplus1;
     
-    % Store data from the first mic position
+    % Case 0: Store data from the first mic position
     Pr_Audio(T) = PV_Nplus1(listenerY, listenerX,1);
     Vx_Vel(T)   = PV_Nplus1(listenerY, listenerX,2);
     Vy_Vel(T)   = PV_Nplus1(listenerY, listenerX,3);
+    
+    % Case 1: Store data from the second mic position [Near to PML Layer]
+    Pr_Audio1(T) = PV_Nplus1(listenerY, listenerX+5,1);
+    Vx_Vel1(T)   = PV_Nplus1(listenerY, listenerX+5,2);
+    Vy_Vel1(T)   = PV_Nplus1(listenerY, listenerX+5,3);
   
-    % Case1: Store data from the second mic position [Near to excitation cell]
-    Pr_Audio1(T) = PV_Nplus1(listenerY, exeX+3,1);
-    Vx_Vel1(T)   = PV_Nplus1(listenerY, exeX+3,2);
-    Vy_Vel1(T)   = PV_Nplus1(listenerY, exeX+3,3);
+    % Case 2: Store data from the second mic position [Near to excitation]
+    Pr_Audio2(T) = PV_Nplus1(listenerY, exeX(1)+3,1);
+    Vx_Vel2(T)   = PV_Nplus1(listenerY, exeX(1)+3,2);
+    Vy_Vel2(T)   = PV_Nplus1(listenerY, exeX(1)+3,3);
     
-    % Case2: Store data from the third mic position [Mid position of source and mic]
-    Pr_Audio2(T) = PV_Nplus1(listenerY, exeX+round((listenerX-exeX)/2),1);
-    Vx_Vel2(T)   = PV_Nplus1(listenerY, exeX+round((listenerX-exeX)/2),2);
-    Vy_Vel2(T)   = PV_Nplus1(listenerY, exeX+round((listenerX-exeX)/2),3);
+    % Case 3: Store data from the third mic position [Mid position of source and listener]
+    Pr_Audio3(T) = PV_Nplus1(listenerY, exeX(1)+round((listenerX-exeX(1))/2),1);
+    Vx_Vel3(T)   = PV_Nplus1(listenerY, exeX(1)+round((listenerX-exeX(1))/2),2);
+    Vy_Vel3(T)   = PV_Nplus1(listenerY, exeX(1)+round((listenerX-exeX(1))/2),3);
     
-    % Case3: Store data from the fourth mic position [At the excitation cell]
-    Pr_Audio3(T) = PV_Nplus1(listenerY, exeX,1);
-    Vx_Vel3(T)   = PV_Nplus1(listenerY, exeX,2);
-    Vy_Vel3(T)   = PV_Nplus1(listenerY, exeX,3);
+    % Case 4: Store data from the fourth mic position [At the excitation]
+    Pr_Audio4(T) = PV_Nplus1(listenerY, exeX(1),1);
+    Vx_Vel4(T)   = PV_Nplus1(listenerY, exeX(1),2);
+    Vy_Vel4(T)   = PV_Nplus1(listenerY, exeX(1),3);
     
 end
 
@@ -574,9 +587,11 @@ vRes = sqrt(Vx_Vel.^2 + Vy_Vel.^2);
 vRes1 = sqrt(Vx_Vel1.^2 + Vy_Vel1.^2);
 vRes2 = sqrt(Vx_Vel2.^2 + Vy_Vel2.^2);
 vRes3 = sqrt(Vx_Vel3.^2 + Vy_Vel3.^2);
+vRes4 = sqrt(Vx_Vel4.^2 + Vy_Vel4.^2);
 
 % Save the data
 save('impedanceData.mat','excitationV','Pr_Audio','Vx_Vel','Vy_Vel',...
       'Pr_Audio1','Vx_Vel1','Vy_Vel1','Pr_Audio2','Vx_Vel2','Vy_Vel2',...
-      'Pr_Audio3','Vx_Vel3','Vy_Vel3','vRes', 'vRes1','vRes2', 'vRes3');
+      'Pr_Audio3','Vx_Vel3','Vy_Vel3','Pr_Audio4','Vx_Vel4','Vy_Vel4',...
+      'vRes', 'vRes1','vRes2', 'vRes3','vRes4');
       
