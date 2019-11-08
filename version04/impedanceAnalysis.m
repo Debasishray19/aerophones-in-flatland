@@ -33,7 +33,7 @@ ylabel('Resistance');
 axis 'auto y';
 yLim = ylim();
 axis([2 23050 yLim(1) yLim(2)]);
-% legend('zActual','zTheoritical');
+legend('zActual','zTheoritical');
 hold off;
 
 % Plot reactance
@@ -71,4 +71,3 @@ yLim = ylim();
 axis([2 23050 yLim(1) yLim(2)])
 legend('VxActual','VxTheoritical');
 hold off;
-
