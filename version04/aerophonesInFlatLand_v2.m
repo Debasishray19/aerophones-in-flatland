@@ -434,7 +434,7 @@ Vy_next = zeros(frameH-2,frameW-2);
 figure;
 
 for  T = 1:STEPS
-    tic
+    
     % STEP1: Calculate (del.V) = (dVx/dx + dVy/dy)
     % CxVx = dVx/dx, where Vx = velocity along x direction
     % CyVy = dVy/dy, where Vy = velocity along y direction
@@ -599,7 +599,6 @@ for  T = 1:STEPS
     Vx_Vel4(T)   = PV_Nplus1(listenerY, exeX(1),2);
     Vy_Vel4(T)   = PV_Nplus1(listenerY, exeX(1),3);
     
-    toc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
