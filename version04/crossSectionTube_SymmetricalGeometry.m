@@ -8,7 +8,7 @@
 
 function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSwitch, PV_N]...
          = crossSectionTube_SymmetricalGeometry(pmlSwitch, ds, pmlLayer, vowelSound, simulation2D, cell_wall, cell_air, cell_excitation, cell_noPressure, cell_head)
-     
+
     % Define units
     meter = 1;
     centimeter = 1e-2*meter;
@@ -346,7 +346,7 @@ function [listenerX, listenerY, frameH, frameW, depthX, depthY, depthP, baffleSw
         % Find the column from where circular buffer starts
         bufferStartX = 1;
 
-        while isempty(find(PV_N(:,bufferStartX,4)==cell_head))
+        while isempty(find(PV_N(:,bufferStartX,4)==cell_head,1))
             bufferStartX =  bufferStartX+1;
         end
 

@@ -1,12 +1,20 @@
+%% ========================================================================
+%% Impedance Analysis
+
+%% ========================================================================
+
+% Clear the workspace and close all graph windows
 close all; 
 clear;
+
+% Set the constant values
 rho = 1.140;
 c   = 350;
 fs = 15*44100;
-load('impedanceData_20_ms.mat');
-% load('impedanceData.mat');
-% load('impedanceData_50_ms.mat');
-% load('impedanceData_1_2_sec.mat');
+
+% Load the file
+load('impedanceData.mat');
+
 Pr_fft = fft(Pr_Audio);
 Vx_fft = fft(Vx_Vel);
 
@@ -20,32 +28,29 @@ Vx_theoritical_fft  = Vx_theoritical_real + (1i.*Vx_theoritical_imag);
 % Calculating Z impedance
 z_actual = Pr_fft./Vx_fft;
 z_theoritical = Pr_fft./Vx_theoritical_fft;
-
-% Source Signal samples
-% plotFrequencyPhase(excitationV(1:length(Pr_Audio)), fs)
     
 % Plot resistance
 figure;  hold on;
-plot(real(z_actual));
-% plot(real(z_theoritical));
+plot(real(z_actual(1:10000)));
+plot(real(z_theoritical));
 xlabel('frequency in Hz');
 ylabel('Resistance');
 axis 'auto y';
 yLim = ylim();
 axis([2 23050 yLim(1) yLim(2)]);
-% legend('zActual','zTheoritical');
+legend('zActual','zTheoritical');
 hold off;
 
 % Plot reactance
 figure; hold on;
-plot(imag(z_actual)); 
+plot(imag(z_actual(1:10000))); 
 plot(imag(z_theoritical));
 xlabel('frequency in Hz');
 ylabel('Reactance');
 axis 'auto y';
 yLim = ylim();
-axis([2 23050 yLim(1) yLim(2)])
-legend('zActual','zTheoritical');
+axis([2 10000 yLim(1) yLim(2)])
+legend('R','X');
 hold off;
 
 % Plot fft(Vx_Vel) real
@@ -71,4 +76,3 @@ yLim = ylim();
 axis([2 23050 yLim(1) yLim(2)])
 legend('VxActual','VxTheoritical');
 hold off;
-

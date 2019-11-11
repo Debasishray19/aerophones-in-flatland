@@ -8,6 +8,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INITIALIZE MATLAB ENVIRONMENT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 close all; 
 clear;
 clc;
@@ -69,9 +70,9 @@ Vx_Vel = zeros(1, STEPS);
 Vy_Vel = zeros(1, STEPS);
 
 % Case 1: To store the data from second mic position [Near to PML Layer]
-Pr_Audio1 = zeros(1, STEPS);
-Vx_Vel1 = zeros(1, STEPS);
-Vy_Vel1 = zeros(1, STEPS);
+Pr_Audio1 = zeros(6, STEPS);
+Vx_Vel1 = zeros(6, STEPS);
+Vy_Vel1 = zeros(6, STEPS);
 
 % case 2: To store the data from the second mic [Near to excitation]
 Pr_Audio2 = zeros(1, STEPS);
@@ -382,6 +383,7 @@ maxVySigmaPrimedt = zeros(frameH-2,frameW-2);
 PressureSigmaPrimedt = zeros(frameH-2,frameW-2);
 cellTypes = zeros(1,3);
 sigma_prime_dt = zeros(1,3);
+beta = zeros(1,3);
 typeIndex = zeros(1,3);
 
 % Not inclusing cell_dead type
@@ -431,8 +433,8 @@ Vy_next = zeros(frameH-2,frameW-2);
 % Open a new figure window to visualize the simulation
 figure;
 
-for T = 1:STEPS
-    
+for  T = 1:STEPS
+    tic
     % STEP1: Calculate (del.V) = (dVx/dx + dVy/dy)
     % CxVx = dVx/dx, where Vx = velocity along x direction
     % CyVy = dVy/dy, where Vy = velocity along y direction
@@ -558,9 +560,29 @@ for T = 1:STEPS
     Vy_Vel(T)   = PV_Nplus1(listenerY, listenerX,3);
     
     % Case 1: Store data from the second mic position [Near to PML Layer]
-    Pr_Audio1(T) = PV_Nplus1(listenerY, listenerX+5,1);
-    Vx_Vel1(T)   = PV_Nplus1(listenerY, listenerX+5,2);
-    Vy_Vel1(T)   = PV_Nplus1(listenerY, listenerX+5,3);
+    Pr_Audio1(1,T) = PV_Nplus1(listenerY, listenerX-1,1);
+    Vx_Vel1(1,T)   = PV_Nplus1(listenerY, listenerX-1,2);
+    Vy_Vel1(1,T)   = PV_Nplus1(listenerY, listenerX-1,3);
+    
+    Pr_Audio1(2,T) = PV_Nplus1(listenerY, listenerX+1,1);
+    Vx_Vel1(2,T)   = PV_Nplus1(listenerY, listenerX+1,2);
+    Vy_Vel1(2,T)   = PV_Nplus1(listenerY, listenerX+1,3);
+    
+    Pr_Audio1(3,T) = PV_Nplus1(listenerY, listenerX+2,1);
+    Vx_Vel1(3,T)   = PV_Nplus1(listenerY, listenerX+2,2);
+    Vy_Vel1(3,T)   = PV_Nplus1(listenerY, listenerX+2,3);
+    
+    Pr_Audio1(4,T) = PV_Nplus1(listenerY, listenerX+3,1);
+    Vx_Vel1(4,T)   = PV_Nplus1(listenerY, listenerX+3,2);
+    Vy_Vel1(4,T)   = PV_Nplus1(listenerY, listenerX+3,3);
+    
+    Pr_Audio1(5,T) = PV_Nplus1(listenerY, listenerX+4,1);
+    Vx_Vel1(5,T)   = PV_Nplus1(listenerY, listenerX+4,2);
+    Vy_Vel1(5,T)   = PV_Nplus1(listenerY, listenerX+4,3);
+    
+    Pr_Audio1(6,T) = PV_Nplus1(listenerY, listenerX+5,1);
+    Vx_Vel1(6,T)   = PV_Nplus1(listenerY, listenerX+5,2);
+    Vy_Vel1(6,T)   = PV_Nplus1(listenerY, listenerX+5,3);
   
     % Case 2: Store data from the second mic position [Near to excitation]
     Pr_Audio2(T) = PV_Nplus1(listenerY, exeX(1)+3,1);
@@ -577,6 +599,7 @@ for T = 1:STEPS
     Vx_Vel4(T)   = PV_Nplus1(listenerY, exeX(1),2);
     Vy_Vel4(T)   = PV_Nplus1(listenerY, exeX(1),3);
     
+    toc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
