@@ -32,6 +32,7 @@ z_theoritical = Pr_fft./Vx_theoritical_fft;
 % Plot resistance
 figure;  hold on;
 plot(real(z_actual(1:10000)));
+plot(real(z_actual));
 plot(real(z_theoritical));
 xlabel('frequency in Hz');
 ylabel('Resistance');
