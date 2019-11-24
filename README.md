@@ -22,5 +22,5 @@
 
 
 <br><b>[Note]:</b>
-<br> Please use the following code <u>aerophonesInFlatlandv2.m</u> in version3 folder for simulation. To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.com
+<br> Please use the following code <u>aerophonesInFlatlandv2.m</u> in version3 folder for simulation. The code has been optimized in the version05. But it's still under testing. To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.com
  
