@@ -38,7 +38,7 @@ ylabel('Resistance');
 axis 'auto y';
 yLim = ylim();
 axis([2 23050 yLim(1) yLim(2)]);
-legend('zActual','zTheoritical');
+legend('resistanceActual','resistanceTheoritical');
 hold off;
 
 % Plot reactance
@@ -50,7 +50,7 @@ ylabel('Reactance');
 axis 'auto y';
 yLim = ylim();
 axis([2 10000 yLim(1) yLim(2)])
-legend('R','X');
+legend('reactanceActual','reactanceTheoritical');
 hold off;
 
 % Plot fft(Vx_Vel) real
