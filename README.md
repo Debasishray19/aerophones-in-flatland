@@ -1,4 +1,4 @@
-# Talking Tube: An Articulatory Speech Synthesis Tool
+# Talking Tube: An Articulatory Speech Synthesis ToolBox
 
 :golf: <b>Summary: </b>
 <br>Talking Tube is a physics-based articulatory speech synthesizer, which can produce English vowel sounds. The model couples lumped-element vocal folds *(two-mass model)* with a novel 2D lightweight vocal tract model *(2.5D FDTD)* to generate synthetic audio output. The synthesizer uses the Finite-DIfference Time-Domain numerical scheme [3][4] to discretize acoustic components (pressure and velocity) on a staggered grid and computes the acoustic wave propagation. The proposed model *(2.5D FDTD)* is the extension of existing 2D FDTD vocal tract modelling approach and add a new impedance parameter *(tube depth)* [7] to its acoustic solver. And the acoustic anaysis of 2.5D FDTD vocal tract model has been proven to be precise when compared with a high-quality 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract models [2]. The mid-saggital cross-sectional area is used [5] to construct the vocal tract contour on a 2D rectangular mesh from a 3D vocal tract MRI image.
