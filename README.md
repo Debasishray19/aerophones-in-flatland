@@ -2,10 +2,14 @@
 
 <br>Talking Tube is a physics-based articulatory speech synthesizer, which can produce English vowel sounds. The model couples lumped-element vocal folds *(two-mass model)* with a novel 2D lightweight vocal tract model *(2.5D FDTD)* to generate synthetic audio output. The synthesizer uses the Finite-DIfference Time-Domain numerical scheme [3][4] to discretize acoustic components (pressure and velocity) on a staggered grid and computes the acoustic wave propagation. The proposed model *(2.5D FDTD)* is the extension of existing 2D FDTD vocal tract modelling approach and add a new impedance parameter *(tube depth)* [7] to its acoustic solver. And the acoustic anaysis of 2.5D FDTD vocal tract model has been proven to be precise when compared with a high-quality 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract models [2]. The mid-saggital cross-sectional area is used [5] to construct the vocal tract contour on a 2D rectangular mesh from a 3D vocal tract MRI image.
 
+The project was motivated from *"Aerophones In Flatland"* research article [1].
+
 <img src="img/rotating_tract.gif" width="500" height="400">
 
 <img src="img/vowel_domain_plus_pml.JPG" width="500" height="400">
 
+<br><b>YouTube Link: </b>
+<br>[1] <a href = "https://www.youtube.com/watch?v=0wqWfBbIQtg">Arophones In Flatland: SIGGRAPH 2015 Talk</a>
 
 <br><b>References: </b>
 <br>[1] <a href ="https://dl.acm.org/citation.cfm?id=2767001">"Aerophones in flatland: Interactive Wave Simulation Of Wind Instruments"</a>  by Andrew Allen, Nikunj Raghuvansi. 
@@ -15,14 +19,11 @@
 <br>[5]<a href="https://asa.scitation.org/doi/10.1121/1.2805683">"Comparision of magnetic imaging-based vocal tract area functions obtained from the same speaker in 1994 and 2002"</a> by Brad H. Story
 <br>[6]<a href = "https://asa.scitation.org/doi/10.1121/1.4837221">"Two dimensional vocal tracts with three-dimensional behaviour in the numerical generation of vowels"</a> by Marc Arnela and Oriol Guasch
 
-<br><b>YouTube Link: </b>
-<br>[1] <a href = "https://www.youtube.com/watch?v=0wqWfBbIQtg">Arophones In Flatland: SIGGRAPH 2015 Talk</a>
-
 <br><b>Publication:</b>
 <br>Following is the research paper that comes out of this project. If you would like to use the code for your research, please consider citing this paper:
 <br>[7] <a href="https://www.isca-speech.org/archive/Interspeech_2019/abstracts/1764.html">"An Extended Two-Dimensional Vocal Tract Model for Fast Acoustic Simulation of Single-Axis Symmetric Three-Dimensional Tubes"</a> by DR Mohapatra, Victor Zappt, Sidney Fels, INTERSPEECH 2019, Graz, Austria. [[Code]](https://github.com/Debasishray19/vocaltube-speech-synthesis/tree/master/version03) [[Talk Slide]](https://github.com/Debasishray19/vocaltube-speech-synthesis/blob/master/Interspeech2019%20Presentation/Interspeech%202019%20Presentation.pptx)
 
 
 <br><b>[Note]:</b>
-<br> Please use the following code <u>aerophonesInFlatlandv2.m</u> in version3 folder for simulation. The code has been optimized in the version05. But it's still under testing. To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.com
+<br> To inquiry or for bugs/suggestions, please contact: debasishiter@gmail.com
  
