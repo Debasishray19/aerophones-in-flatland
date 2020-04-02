@@ -1,9 +1,11 @@
 # Talking Tube: An Articulatory Speech Synthesis
-<br><b>About:</b>
-<br>The objective of this project is to build a new vocal tract model which could be as precise as 3D models in terms of formants position and also computationally lightweight. This might help in designing real-time or quasi real-time articulatory speech synthesis. Therefore, we are proposing a new vocal tract model (2.5D FDTD) which has been proven to be precise when compared with a realistic regular 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract model [2]. We are using finite difference time domain technique to design the acoustic wave solver. The below images show the geometrical modeling of cross-sectional areas for vowel sound /u/ and it's acoustic simulation.
 
-<img src="img/vowel_domain_plus_pml.JPG" width="625">
-<img src="img/simulation_vowel_u.JPG" width="625">
+<br>Talking Tube is a physics-based articulatory speech synthesizer, which can produce English vowel sounds. The model couples lumped-element vocal folds *(two-mass model)* with a novel 2D lightweight vocal tract model *(2.5D FDTD)* to generate synthetic audio output. The synthesizer uses the Finite-DIfference Time-Domain numerical scheme [3][4] to discretize acoustic components (pressure and velocity) on a staggered grid and computes the acoustic wave propagation. The proposed model *(2.5D FDTD)* is the extension of existing 2D FDTD vocal tract modelling approach and add a new impedance parameter *(tube depth)* [7] to its acoustic solver. And the acoustic anaysis of 2.5D FDTD vocal tract model has been proven to be precise when compared with a high-quality 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract models [2]. The mid-saggital cross-sectional area is used [5] to construct the vocal tract contour on a 2D rectangular mesh from a 3D vocal tract MRI image.
+
+<img src="img/rotating_tract.gif" width="500" height="400">
+
+<img src="img/vowel_domain_plus_pml.JPG" width="500" height="400">
+
 
 <br><b>References: </b>
 <br>[1] <a href ="https://dl.acm.org/citation.cfm?id=2767001">"Aerophones in flatland: Interactive Wave Simulation Of Wind Instruments"</a>  by Andrew Allen, Nikunj Raghuvansi. 
@@ -18,7 +20,7 @@
 
 <br><b>Publication:</b>
 <br>Following is the research paper that comes out of this project. If you would like to use the code for your research, please consider citing this paper:
-<br>[1] <a href="https://www.isca-speech.org/archive/Interspeech_2019/abstracts/1764.html">"An Extended Two-Dimensional Vocal Tract Model for Fast Acoustic Simulation of Single-Axis Symmetric Three-Dimensional Tubes"</a> by DR Mohapatra, Victor Zappt, Sidney Fels, INTERSPEECH 2019, Graz, Austria. [[Code]](https://github.com/Debasishray19/vocaltube-speech-synthesis/tree/master/version03) [[Talk Slide]](https://github.com/Debasishray19/vocaltube-speech-synthesis/blob/master/Interspeech2019%20Presentation/Interspeech%202019%20Presentation.pptx)
+<br>[7] <a href="https://www.isca-speech.org/archive/Interspeech_2019/abstracts/1764.html">"An Extended Two-Dimensional Vocal Tract Model for Fast Acoustic Simulation of Single-Axis Symmetric Three-Dimensional Tubes"</a> by DR Mohapatra, Victor Zappt, Sidney Fels, INTERSPEECH 2019, Graz, Austria. [[Code]](https://github.com/Debasishray19/vocaltube-speech-synthesis/tree/master/version03) [[Talk Slide]](https://github.com/Debasishray19/vocaltube-speech-synthesis/blob/master/Interspeech2019%20Presentation/Interspeech%202019%20Presentation.pptx)
 
 
 <br><b>[Note]:</b>
