@@ -543,6 +543,7 @@ Vy_next = zeros(frameH-2,frameW-2);
 % Open a new figure window to visualize the simulation
 figure;
 
+
 % Figure out the row and column number from the middle cell of  the row of
 % excitation cells
 [rowNums, colNums] = find(PV_N(:,:,4)==cell_excitation);
@@ -660,10 +661,13 @@ for T = 1:STEPS
     
     % STEP10: Plot wave simulation
     if ~mod(T,1)
-        imagesc(audio_Vis,[-1000 4000]);  colorbar; % Multiplied with twenty to change the color code
-        xlabel('Spatial Resolution along X');
-        ylabel('Spatial Resolution along Y');
-        title(['STEP NUMBER: ' num2str(T) ' OUT OF ' num2str(STEPS)]);
+        imagesc(audio_Vis,[-1000 4000]);  %colorbar; % Multiplied with twenty to change the color code
+        %xlabel('Spatial Resolution along X');
+        %ylabel('Spatial Resolution along Y');
+        title('Vowel Simulation');
+        set(gca,'xtick',[]);
+        set(gca,'ytick',[]);
+        %title(['STEP NUMBER: ' num2str(T) ' OUT OF ' num2str(STEPS)]);
         drawnow;     
     end
     
