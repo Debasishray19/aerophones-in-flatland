@@ -30,6 +30,8 @@ The project was motivated from *"Aerophones In Flatland"* research article [1].
 
 [STEP9] *<b>Select acoustic source model:</b>* Select 4 for two mass model
 
+<img src="img/vowelSimulation.gif" width="500" height="400">
+
 :movie_camera:<b>YouTube Link: </b>
 <br>[1] <a href = "https://www.youtube.com/watch?v=0wqWfBbIQtg">Arophones In Flatland: SIGGRAPH 2015 Talk</a>
 
