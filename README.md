@@ -1,4 +1,4 @@
-# The Vocaltube: An Articulatory Speech Synthesis
+# Talking Tube: An Articulatory Speech Synthesis
 <br><b>About:</b>
 <br>The objective of this project is to build a new vocal tract model which could be as precise as 3D models in terms of formants position and also computationally lightweight. This might help in designing real-time or quasi real-time articulatory speech synthesis. Therefore, we are proposing a new vocal tract model (2.5D FDTD) which has been proven to be precise when compared with a realistic regular 3D FEM vocal tract model [6] and computationally much faster than the previous 2D vocal tract model [2]. We are using finite difference time domain technique to design the acoustic wave solver. The below images show the geometrical modeling of cross-sectional areas for vowel sound /u/ and it's acoustic simulation.
 
