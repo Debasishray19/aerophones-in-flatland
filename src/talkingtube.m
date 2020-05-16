@@ -19,7 +19,7 @@ meter = 1;
 centimeter  =1e-2 * meter;
 
 second    = 1;
-milisecond = 1e-3 * second;
+millisecond = 1e-3 * second;
 hertz     = 1/second;
 kilohertz = 1e3 * hertz;
 megahertz = 1e6 * hertz;
@@ -48,7 +48,7 @@ baffleSwitch = 0;                  % By default model should not have head/circu
 dt = 1/srate;                      % Temporal resolution/ sample time period
 dx = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
 dy = dt*c*sqrt( 2.0 );             % Spatial resolution along x-direction: CFL Condition
-AudioTime = 1*second;              % Total audio signal time
+AudioTime = 50*millisecond;              % Total audio signal time
 kappa = rho*c*c;                   % Bulk modulus
 ds = dx;                           % Spatial resolution(ds) = dx = dy
 
@@ -246,12 +246,12 @@ switch simulationType
         end
         
     case 4 % For vowel sound
-        vowelSound = input('Choose vowels [1-\a\ 2-\u\ 3-\o\ 4-\i\]: ');
+        vowelSound = input('Choose vowels [1-\a\ 2-\u\ 3-\o\ 4-\i\ 5-\e\]: ');
         
         % Keep asking user enter wrong input
-        while vowelSound<1 || vowelSound>4
+        while vowelSound<1 || vowelSound>5
             disp('Give correct input')
-            vowelSound = input('Choose vowels [1-\a\ 2-\u\ 3-\o\ 4-\i\]: ');
+            vowelSound = input('Choose vowels [1-\a\ 2-\u\ 3-\o\ 4-\i\ 5-\e\]: ');
         end
               
         % Generate the Tube Shape
@@ -660,14 +660,14 @@ for T = 1:STEPS
     audio_Vis(PV_Nplus1(:,:,4)==cell_head) = vis_Boundary;
     
     % STEP10: Plot wave simulation
-    if ~mod(T,1)
+    if ~mod(T,1000)
         imagesc(audio_Vis,[-1000 4000]);  %colorbar; % Multiplied with twenty to change the color code
         %xlabel('Spatial Resolution along X');
         %ylabel('Spatial Resolution along Y');
-        title('Vowel Simulation');
+        %title('Vowel Simulation');
         set(gca,'xtick',[]);
         set(gca,'ytick',[]);
-        %title(['STEP NUMBER: ' num2str(T) ' OUT OF ' num2str(STEPS)]);
+        title(['STEP NUMBER: ' num2str(T) ' OUT OF ' num2str(STEPS)]);
         drawnow;     
     end
     
@@ -759,5 +759,3 @@ end
 
 % Create the audio data and play
 generateAudio(Pr_Audio, srate, srate_mul);
-
-save('vowel_i25.mat', 'Pr_Audio', 'srate', 'srate_mul');

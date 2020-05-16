@@ -26,4 +26,7 @@ function  finalAudioOutput = generateAudio (Pr_Audio, srate, srate_mul)
     
     % play the audio
     sound(finalAudioOutput, 1*44100);
+    
+    % save audio data
+    % audiowrite('sound.wav',finalAudioOutput,1*44100);
 end
