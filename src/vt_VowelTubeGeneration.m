@@ -216,7 +216,7 @@ function [listenerX, listenerY, glottalDiameter2D, glottalDiameter3D, upperTubeE
     if vowelSound == 5
         mu3D = ones(1,numSections).*0.03;
     else
-        mu3D = ones(1,numSections).*0.045; %should be 0.005
+        mu3D = ones(1,numSections).*0.005; %(Just for testing vowel sound) 0.045
     end
     
     areaExpansionFlag = input('Apply area expansion ratio to boundary admittance [1-ON 0-Off]: ');

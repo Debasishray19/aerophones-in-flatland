@@ -19,7 +19,7 @@ meter = 1;
 centimeter  =1e-2 * meter;
 
 second    = 1;
-milisecond = 1e-3 * second;
+millisecond = 1e-3 * second;
 hertz     = 1/second;
 kilohertz = 1e3 * hertz;
 megahertz = 1e6 * hertz;
